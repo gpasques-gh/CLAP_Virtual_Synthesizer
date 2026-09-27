@@ -42,13 +42,15 @@ typedef struct
 typedef struct
 {
 	rectangle_t rec;
+	uint8_t val;
 	const char *name;
 } menu_entry_t;
 
 typedef struct
 {
 	rectangle_t base_rec;
-	menu_entry_t *entries;
+	menu_entry_t entries[4];
+	menu_entry_t selected;
 	bool entries_on;
 	clap_id param_id;
 	uint32_t param_value;

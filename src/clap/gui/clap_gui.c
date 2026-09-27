@@ -6,8 +6,10 @@
 #include <string.h>
 #include <stdio.h>
 
+/* MACROS */
 #define IN_REC(x, y, rec) (x >= (rec.left) && x < (rec.right) && y >= (rec.top) && y < (rec.bottom))
-#define PATH_MAX 40
+#define PARAM_IS_SLIDER(id) (id == P_ATTACK || id == P_DECAY || id == P_SUSTAIN || id == P_RELEASE || id == P_VOLUME || id == P_CUTOFF || id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_SUSTAIN || id == P_FILTER_RELEASE || id == P_DETUNE)
+#define PARAM_IS_CHECKBOX(id) (id == P_FILTER_ENV_ON)
 
 #include "lib_clap/include/clap/clap.h"
 #include "clap/clap_plugin.h"
@@ -303,7 +305,34 @@ static uint32_t get_param_gui(
 	rectangle_t cutoff = 
 		elements.cutoff_slider.rec_value;
 
+	rectangle_t f_env_on =
+		elements.filter_env_on_box.rec;
+
+	rectangle_t menu =
+		elements.waveforms.base_rec;
+	rectangle_t sine =
+		elements.waveforms.entries[0].rec;
+	rectangle_t square =
+		elements.waveforms.entries[1].rec;
+	rectangle_t triangle =
+		elements.waveforms.entries[2].rec;
+	rectangle_t sawtooth =
+		elements.waveforms.entries[3].rec;
+
+	
+
 	/* Return the parameter ID from XY position */
+
+	if (elements.waveforms.entries_on)
+	{
+		if (IN_REC(x, y, sine) || 
+			IN_REC(x, y, square) || 
+			IN_REC(x, y, triangle) || 
+			IN_REC(x, y, sawtooth))
+				return P_WAVE_A;
+	}
+	if (IN_REC(x, y, menu))
+		return P_WAVE_A;
 	if (IN_REC(x, y, amp))
 		return P_VOLUME;
 	if (IN_REC(x, y, attack))
@@ -324,9 +353,28 @@ static uint32_t get_param_gui(
 		return P_FILTER_RELEASE;
 	if (IN_REC(x, y, cutoff))
 		return P_CUTOFF;
+	if (IN_REC(x, y, f_env_on))
+		return P_FILTER_ENV_ON;
 
 	return P_COUNT;
-} 
+}
+
+static void paint_checkbox(uint32_t *bits, checkbox_t box)
+{
+	rectangle_t inner_rec = 
+	{
+		.left = box.rec.left + 5,
+		.right = box.rec.right - 5,
+		.top = box.rec.top + 5,
+		.bottom = box.rec.bottom - 5,
+		.fill_color = 0xFFFFF,
+		.border_color = 0xFFFFF
+	};
+
+	plugin_paint_rec(bits, box.rec);
+	if (box.param_value)
+		plugin_paint_rec(bits, inner_rec);
+}
 
 /* Get slider rectangle from parameter ID */
 static rectangle_t get_slider_rec(gui_elements_t elements, uint32_t param_id)
@@ -390,6 +438,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 	float f_sustain = atomic_load(&plugin->params[P_FILTER_SUSTAIN]);
 	float f_release = atomic_load(&plugin->params[P_FILTER_RELEASE]);
 	float cutoff = atomic_load(&plugin->params[P_CUTOFF]);
+	bool f_env_on = atomic_load(&plugin->params[P_FILTER_ENV_ON]);
 
 	/* Amplification slider */
 	rectangle_t amp_rec = { 10, 110, 10, 50, BLACK, GRAY};
@@ -461,6 +510,39 @@ void gui_create_elements(synth_plugin_t *plugin)
 		compute_horizontal_slider_rec(cutoff_rec, 20, cutoff, 1.0f);
 	plugin->gui->elements.cutoff_slider.param_value = cutoff;
 
+	rectangle_t env_on_rec = {300, 340, 100, 140, GRAY, GRAY};
+	plugin->gui->elements.filter_env_on_box.rec = env_on_rec;
+	plugin->gui->elements.filter_env_on_box.param_value = f_env_on;
+
+	rectangle_t waveform_base_rec = {300, 400, 10, 40, BLACK, GRAY};
+	plugin->gui->elements.waveforms.base_rec = waveform_base_rec;
+	plugin->gui->elements.waveforms.entries_on = false;
+	plugin->gui->elements.waveforms.param_id = P_WAVE_A;
+
+	plugin->gui->elements.waveforms.entries[SINE_WAVE].val = SINE_WAVE;
+	plugin->gui->elements.waveforms.entries[SINE_WAVE].name = "Sine wave";
+	plugin->gui->elements.waveforms.entries[SINE_WAVE].rec = waveform_base_rec;
+
+	plugin->gui->elements.waveforms.entries[SQUARE_WAVE].val = SQUARE_WAVE;
+	plugin->gui->elements.waveforms.entries[SQUARE_WAVE].name = "Square wave";
+	plugin->gui->elements.waveforms.entries[SQUARE_WAVE].rec = waveform_base_rec;
+	plugin->gui->elements.waveforms.entries[SQUARE_WAVE].rec.top += 40;
+	plugin->gui->elements.waveforms.entries[SQUARE_WAVE].rec.bottom += 40;
+	
+	plugin->gui->elements.waveforms.entries[TRIANGLE_WAVE].val = TRIANGLE_WAVE;
+	plugin->gui->elements.waveforms.entries[TRIANGLE_WAVE].name = "Triangle wave";
+	plugin->gui->elements.waveforms.entries[TRIANGLE_WAVE].rec = waveform_base_rec;
+	plugin->gui->elements.waveforms.entries[TRIANGLE_WAVE].rec.top += 80;
+	plugin->gui->elements.waveforms.entries[TRIANGLE_WAVE].rec.bottom += 80;
+
+	plugin->gui->elements.waveforms.entries[SAWTOOTH_WAVE].val = SAWTOOTH_WAVE;
+	plugin->gui->elements.waveforms.entries[SAWTOOTH_WAVE].name = "Sawtooth wave";
+	plugin->gui->elements.waveforms.entries[SAWTOOTH_WAVE].rec = waveform_base_rec;
+	plugin->gui->elements.waveforms.entries[SAWTOOTH_WAVE].rec.top += 120;
+	plugin->gui->elements.waveforms.entries[SAWTOOTH_WAVE].rec.bottom += 120;
+
+	plugin->gui->elements.waveforms.selected = plugin->gui->elements.waveforms.entries[0];
+	
 	/* Load the font from the asset header */
 	gui_load_font_mem(__embedded_font);
 }
@@ -511,6 +593,40 @@ static void update_sliders(synth_plugin_t *p)
 	update_slider(&p->gui->elements.cutoff_slider, 20, cutoff, 1.0f);
 }
 
+/* Draw the drop down menus (enums) */
+static void draw_waveforms_menus(synth_plugin_t *plugin)
+{
+	menu_t waveforms = plugin->gui->elements.waveforms;
+	if (waveforms.entries_on)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			int text_x = waveforms.entries[i].rec.left + 10;
+			int text_y = waveforms.entries[i].rec.top + 10;
+
+			plugin_paint_rec(plugin->gui->bits, waveforms.entries[i].rec);
+			plugin_paint_text(
+				plugin->gui->bits,
+				text_x, text_y, 
+				waveforms.entries[i].name,
+				10, BLACK);
+		}
+	}
+	else 
+	{
+		plugin_paint_rec(plugin->gui->bits, waveforms.base_rec);
+		int text_x = waveforms.base_rec.left + 10;
+		int text_y = waveforms.base_rec.top + 10;
+
+		plugin_paint_rec(plugin->gui->bits, waveforms.base_rec);
+		plugin_paint_text(
+			plugin->gui->bits,
+			text_x, text_y, 
+			waveforms.selected.name,
+			10, BLACK);
+	}
+}
+
 void plugin_paint(synth_plugin_t *plugin, uint32_t *bits) 
 {
 	rectangle_t background = 
@@ -541,6 +657,10 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 	plugin_paint_slider(bits, plugin->gui->elements.filter_adsr_sliders[2]);
 	plugin_paint_slider(bits, plugin->gui->elements.filter_adsr_sliders[3]);
 	plugin_paint_slider(bits, plugin->gui->elements.cutoff_slider);
+
+	paint_checkbox(bits, plugin->gui->elements.filter_env_on_box);
+
+	draw_waveforms_menus(plugin);
 
 	draw_piano_keyboard(plugin);
 }
@@ -584,15 +704,71 @@ void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y)
 	uint32_t param_id = get_param_gui(plugin->gui->elements, x, y);
 	if (param_id >= 0 && param_id < P_COUNT)
 	{
-		plugin->mouse.mouse_dragging = true;
-		plugin->mouse.drag_param_id = param_id;
-		plugin->mouse.mouse_drag_og_x = x;
-		plugin->mouse.mouse_drag_og_y = y;
-		plugin->mouse.drag_param_og_val = atomic_load(&plugin->params[plugin->mouse.drag_param_id]);
-		atomic_store(&plugin->gestures_start[plugin->mouse.drag_param_id], true);
+		if (param_id == P_WAVE_A && 
+			!plugin->gui->elements.waveforms.entries_on)
+		{
+			plugin->mouse.mouse_dragging = false;
+			plugin->gui->elements.waveforms.entries_on = true;
+		}
+		else if (param_id == P_WAVE_A)
+		{
+			plugin->mouse.mouse_dragging = false;
+			rectangle_t sine =
+				plugin->gui->elements.waveforms.entries[0].rec;
+			rectangle_t square =
+				plugin->gui->elements.waveforms.entries[1].rec;
+			rectangle_t triangle =
+				plugin->gui->elements.waveforms.entries[2].rec;
+			rectangle_t sawtooth =
+				plugin->gui->elements.waveforms.entries[3].rec;
+
+			uint8_t wave = SINE_WAVE;
+
+			if (IN_REC(x, y, square))
+				wave = SQUARE_WAVE;
+			else if (IN_REC(x, y, triangle))
+				wave = TRIANGLE_WAVE;
+			else if (IN_REC(x, y, sawtooth))
+				wave = SAWTOOTH_WAVE;
+
+			atomic_store(&plugin->params[P_WAVE_A], wave);
+			atomic_store(&plugin->params_dirty[P_WAVE_A], true);
+			atomic_store(&plugin->params[P_WAVE_B], wave);
+			atomic_store(&plugin->params_dirty[P_WAVE_B], true);
+			atomic_store(&plugin->params[P_WAVE_C], wave);
+			atomic_store(&plugin->params_dirty[P_WAVE_C], true);
+
+			plugin->gui->elements.waveforms.entries_on = false;
+			plugin->gui->elements.waveforms.selected =
+					plugin->gui->elements.waveforms.entries[wave];
+		}
+		else if (PARAM_IS_SLIDER(param_id))
+		{
+			plugin->mouse.mouse_dragging = true;
+			plugin->mouse.drag_param_id = param_id;
+			plugin->mouse.mouse_drag_og_x = x;
+			plugin->mouse.mouse_drag_og_y = y;
+			plugin->mouse.drag_param_og_val = atomic_load(&plugin->params[plugin->mouse.drag_param_id]);
+			atomic_store(&plugin->gestures_start[plugin->mouse.drag_param_id], true);
+		}
+		else if (PARAM_IS_CHECKBOX(param_id))
+		{
+			plugin->mouse.mouse_dragging = false;
+			bool param = atomic_load(&plugin->params[param_id]);
+			atomic_store(&plugin->params_dirty[param_id], true);
+			atomic_store(&plugin->params[param_id], !param);
+			plugin->gui->elements.filter_env_on_box.param_value = !param;
+		}
 
 		if (plugin->host_params && plugin->host_params->request_flush)
 			plugin->host_params->request_flush(plugin->host);
+	}
+	else if (param_id > P_COUNT)
+	{
+		if (plugin->gui->elements.waveforms.entries_on)
+		{
+			plugin->gui->elements.waveforms.entries_on = false;
+		}
 	}
 }
 

@@ -275,6 +275,8 @@ static void params_flush(
 			event->type == CLAP_EVENT_PARAM_VALUE)
 				process_event(p, event);
 	}
+
+	flush_gui_params(p, out);
 }
 
 /* Parameters extension */
