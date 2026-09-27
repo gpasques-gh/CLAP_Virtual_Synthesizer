@@ -161,6 +161,8 @@ static int synth_alocate(const clap_plugin_t *plugin)
 		p->synth.voices[i].oscillators[0].wave = SINE_WAVE;
 		p->synth.voices[i].oscillators[1].wave = SINE_WAVE;
 		p->synth.voices[i].oscillators[2].wave = SINE_WAVE;
+
+		atomic_init(&p->atomic_notes[i], -1);
 	}
 
 	return 0;
@@ -323,8 +325,21 @@ clap_process_status plugin_process(
 		/* Count the number of active voices */
 		int active_voices = 0;
 		for (int v = 0; v < VOICES; v++)
+		{
 			if (p->synth.voices[v].adsr.state != ENV_IDLE)
+			{
 				active_voices++;
+			}
+
+			if (p->synth.voices[v].pressed)
+			{
+				atomic_store(&p->atomic_notes[v], p->synth.voices[v].note);
+			}
+			else
+			{
+				atomic_store(&p->atomic_notes[v], -1);
+			}
+		}
 
 		/* Render the synthesizer sound data */
 		while (frame < next_event_frame)

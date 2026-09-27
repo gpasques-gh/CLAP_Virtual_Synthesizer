@@ -26,6 +26,7 @@ typedef HANDLE mutex;
 #include "clap/clap_params.h"
 #include "clap/gui/clap_gui.h"
 #include "core/synth.h"
+#include "defs.h"
 
 #include <stdatomic.h>
 
@@ -47,6 +48,7 @@ typedef struct synth_plugin_s
 	_Atomic float params[P_COUNT];
 	atomic_bool params_dirty[P_COUNT];
 	atomic_bool gestures_start[P_COUNT], gestures_end[P_COUNT];
+	_Atomic int atomic_notes[VOICES];
 	const clap_host_params_t *host_params;
 	
 	/* Graphical User Interface */

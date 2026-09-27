@@ -39,22 +39,21 @@ LRESULT CALLBACK gui_window_procedure(
 	case WM_MOUSEMOVE:
 	{
 		plugin_process_mouse_drag(plugin, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
-		gui_paint(plugin, true);
 		break;
 	}
 	case WM_LBUTTONDOWN:
 		SetCapture(window);
 		plugin_process_mouse_press(plugin, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
-		gui_paint(plugin, true);
 		break;
 	case WM_LBUTTONUP:
 		ReleaseCapture();
 		plugin_process_mouse_release(plugin);
-		gui_paint(plugin, true);
 		break;
 	default:
 		return DefWindowProc(window, message, wparam, lparam);
 	}
+
+	gui_paint(plugin, true);
 
 	return 0;
 }

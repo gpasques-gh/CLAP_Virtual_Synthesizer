@@ -112,6 +112,7 @@
 #define WIDTH 1769
 #define HEIGHT 800
 #define TITLE "ALSA & raygui Synthesizer"
+#endif /* __CLAP__ */
 
 /* MIDI piano visualizer */
 #define WHITE_KEYS 52
@@ -120,7 +121,6 @@
 #define WHITE_KEYS_HEIGHT HEIGHT / 4
 #define BLACK_KEYS_WIDTH WHITE_KEYS_WIDTH / 2
 #define BLACK_KEYS_HEIGHT (WHITE_KEYS_HEIGHT * 2) / 3
-#endif /* __CLAP__ */
 
 /* LFO modulated parameters */
 #define LFO_OFF 0

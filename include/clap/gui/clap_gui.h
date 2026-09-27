@@ -3,7 +3,7 @@
 #ifndef __CLAP_GUI_H__
 #define __CLAP_GUI_H__
 
-#define GUI_WIDTH (800)
+#define GUI_WIDTH (780)
 #define GUI_HEIGHT (400)
 
 #define GRAY 0xC0C0C0

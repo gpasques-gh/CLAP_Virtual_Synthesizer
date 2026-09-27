@@ -18,6 +18,8 @@
 #include "lib_stb/stb_truetype.h"
 #include "clap_assets/regular_font.h"
 
+#include "defs.h"
+
 /* Font structure */
 typedef struct 
 {
@@ -145,6 +147,124 @@ static void plugin_paint_rec(uint32_t *bits, rectangle_t rec)
 					? rec.border_color
 					: rec.fill_color;
 		}
+	}
+}
+
+static void render_white_keys(uint32_t *bits)
+{
+	for (int i = 0; i < WHITE_KEYS; i++)
+	{
+		rectangle_t key = 
+		{
+			.left = (GUI_WIDTH / WHITE_KEYS) * i,
+			.right = (GUI_WIDTH / WHITE_KEYS) * i + (GUI_WIDTH / WHITE_KEYS),
+			.top = GUI_HEIGHT - GUI_HEIGHT / 6,
+			.bottom = GUI_HEIGHT,
+			.border_color = BLACK,
+			.fill_color = 0xFFFFFF
+		};
+		plugin_paint_rec(bits, key);
+	}
+}
+
+static void render_black_keys(uint32_t *bits)
+{
+	int black_keys_pattern[] = 
+		{1, 1, 0, 1, 1, 1, 0, 0};
+	int white_key_idx = 0;
+
+	for (int octave = 0; octave <= (WHITE_KEYS / 7); octave++)
+	{
+		for (int i = 0; i < 7; i++)
+		{
+			if (black_keys_pattern[i])
+			{
+				int x = ((white_key_idx + 1) * 
+					(GUI_WIDTH / WHITE_KEYS) - 
+					(GUI_WIDTH / WHITE_KEYS / 4));
+				rectangle_t key = 
+				{
+					.left = x,
+					.right = x + (GUI_WIDTH / WHITE_KEYS / 2),
+					.top = (GUI_HEIGHT - GUI_HEIGHT / 6),
+					.bottom = ((GUI_HEIGHT - GUI_HEIGHT / 6) + GUI_HEIGHT / 10),
+					.border_color = BLACK,
+					.fill_color = BLACK 
+				};
+				plugin_paint_rec(bits, key);
+				
+			}
+
+			white_key_idx++;
+			if (white_key_idx >= WHITE_KEYS)
+				break;
+		}
+
+		if (white_key_idx >= WHITE_KEYS)
+			break;
+	}
+}
+
+void render_key(uint32_t *bits, uint8_t midi_note)
+{
+	int note_in_octave = midi_note % 12;
+	int octave = midi_note / 12;
+
+	static const int black_keys[] = {0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0};
+	bool is_black = black_keys[note_in_octave];
+
+	static const int white_key_map[] = {0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6};
+	int white_key_in_octave = white_key_map[note_in_octave];
+	int white_key_index = (octave * 7) + white_key_in_octave;
+
+	rectangle_t key = {0};
+	key.top = GUI_HEIGHT - GUI_HEIGHT / 6;
+
+	int white_key_width = (GUI_WIDTH / WHITE_KEYS);
+	int black_key_width = white_key_width / 2;
+
+	if (is_black)
+	{
+		key.left = (white_key_index * white_key_width) + white_key_width - (black_key_width / 2);
+		key.right = key.left + black_key_width;
+		key.bottom = key.top + (GUI_HEIGHT / 10);
+	}
+	else
+	{
+		key.left = white_key_index * white_key_width;
+		key.right = key.left + white_key_width;
+		key.bottom = GUI_HEIGHT;
+	}
+
+	key.fill_color = GRAY;
+	key.border_color = BLACK;
+
+	plugin_paint_rec(bits, key);
+}
+
+int is_black_key(int midi_note)
+{
+	int note = midi_note % 12;
+	return (note == 1 || note == 3 || note == 6 || note == 8 || note == 10);
+}
+
+
+static void draw_piano_keyboard(synth_plugin_t *plugin)
+{
+	render_white_keys(plugin->gui->bits);
+	for (int v = 0; v < VOICES; v++)
+	{
+		int note = atomic_load(&plugin->atomic_notes[v]);
+		if (note != -1 && !is_black_key(note))
+		render_key(plugin->gui->bits, note);
+	}
+	
+	render_black_keys(plugin->gui->bits);
+	for (int v = 0; v < VOICES; v++)
+	{
+		int note = atomic_load(&plugin->atomic_notes[v]);
+		if (note != -1 && is_black_key(note))
+			render_key(plugin->gui->bits, note);
 	}
 }
 
@@ -390,6 +510,7 @@ static void update_sliders(synth_plugin_t *p)
 	update_slider(&p->gui->elements.filter_adsr_sliders[3], 20, f_release, 2.0f);
 	update_slider(&p->gui->elements.cutoff_slider, 20, cutoff, 1.0f);
 }
+
 void plugin_paint(synth_plugin_t *plugin, uint32_t *bits) 
 {
 	rectangle_t background = 
@@ -420,6 +541,8 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 	plugin_paint_slider(bits, plugin->gui->elements.filter_adsr_sliders[2]);
 	plugin_paint_slider(bits, plugin->gui->elements.filter_adsr_sliders[3]);
 	plugin_paint_slider(bits, plugin->gui->elements.cutoff_slider);
+
+	draw_piano_keyboard(plugin);
 }
 
 /* MOUSE GESTURES */
