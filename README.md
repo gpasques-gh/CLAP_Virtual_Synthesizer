@@ -16,6 +16,7 @@ Tested on a Linux Mint Debian Edition machine, a Windows 11 machine and through 
 - Saving and loading presets configurations XML files
 - Recording the synth output into a WAV file
 - CLAP virtual instrument plugin usable in REAPER (not tested in other DAWs or plugin hosts, but if they offcially support CLAP plugins it should work, let me know if it doesn't)
+- It is possible to bundle the CLAP plugin into a VST3 using [clap-wrapper ](https://github.com/free-audio/clap-wrapper) to use it in DAW that does not support CLAP like Ableton Live, it worked for me using and older version of the [VST3 SDK](https://github.com/steinbergmedia/vst3sdk) (3.8.0)
 
 # GUI 🖼️
 ## Standalone mode
