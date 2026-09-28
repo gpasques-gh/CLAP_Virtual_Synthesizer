@@ -53,8 +53,7 @@ void CALLBACK MidiInProc(
  * Change the ADSR parameters when the assigned knobs are being triggered
  * Change the cutoff, detune and amplification when the assigned knobs are being triggered
  */
-int get_midi(snd_rawmidi_t *midi_in, synth_t *synth,
-			 float *attack, float *decay, float *sustain, float *release);
+int get_midi(snd_rawmidi_t *midi_in, synth_t *synth);
 
 #endif /* OS */
 #endif /* MIDI_H */

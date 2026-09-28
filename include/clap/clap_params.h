@@ -63,7 +63,7 @@ extern const clap_plugin_params_t params_ext;
 
 typedef struct synth_plugin_s synth_plugin_t;
 
-void flush_gui_params(synth_plugin_t *p, clap_output_events_t *out);
+void flush_gui_params(synth_plugin_t *p, const clap_output_events_t *out);
 void apply_param_to_engine(
 	synth_plugin_t *p, 
 	clap_id id, 

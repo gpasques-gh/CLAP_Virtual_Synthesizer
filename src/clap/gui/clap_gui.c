@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 /* MACROS */
-#define IN_REC(x, y, rec) (x >= (rec.left) && x < (rec.right) && y >= (rec.top) && y < (rec.bottom))
+#define IN_REC(x, y, rec) ((uint32_t)x >= (rec.left) && (uint32_t)x < (rec.right) && (uint32_t)y >= (rec.top) && (uint32_t)y < (rec.bottom))
 #define PARAM_IS_SLIDER(id) (id == P_ATTACK || id == P_DECAY || id == P_SUSTAIN || id == P_RELEASE || id == P_VOLUME || id == P_CUTOFF || id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_SUSTAIN || id == P_FILTER_RELEASE || id == P_DETUNE)
 #define PARAM_IS_CHECKBOX(id) (id == P_FILTER_ENV_ON)
 
@@ -309,7 +309,7 @@ static void draw_piano_keyboard(synth_plugin_t *plugin)
 /* Send which param corresponds to a XY pos on the GUI */
 static uint32_t get_param_gui(
 	gui_elements_t elements, 
-	int x, int y)
+	uint32_t x, uint32_t y)
 {
 	/* SLIDERS */
 
@@ -471,7 +471,7 @@ static rectangle_t compute_horizontal_slider_rec(
 	};
 }
 
-/* Paint a slider to the GUI bitmap */
+/* Paint a slider and it's text name to the GUI bitmap */
 static void plugin_paint_slider_name(
 	uint32_t *bits, 
 	slider_t slider, 
@@ -482,15 +482,6 @@ static void plugin_paint_slider_name(
 	int txt_x =  slider.rec.left + (slider.rec.right - slider.rec.left) / 2 - txt_w / 2;
 	int txt_y =  slider.rec.top - txt_px_size;
 	plugin_paint_text(bits, txt_x, txt_y, name, txt_px_size, BLACK);
-	plugin_paint_rec(bits, slider.rec);
-	plugin_paint_rec(bits, slider.rec_value);
-}
-
-/* Paint a slider to the GUI bitmap */
-static void plugin_paint_slider(
-	uint32_t *bits, 
-	slider_t slider)
-{
 	plugin_paint_rec(bits, slider.rec);
 	plugin_paint_rec(bits, slider.rec_value);
 }
@@ -879,14 +870,19 @@ static void change_waveform(synth_plugin_t *plugin, uint8_t p_wave, int x, int y
 	rectangle_t sawtooth =
 		waveforms->entries[3].rec;
 
-	uint8_t wave = SINE_WAVE;
+	uint8_t wave = UINT8_MAX;
 
+	if (IN_REC(x, y, sine))
+		wave = SINE_WAVE;
 	if (IN_REC(x, y, square))
 		wave = SQUARE_WAVE;
 	else if (IN_REC(x, y, triangle))
 		wave = TRIANGLE_WAVE;
 	else if (IN_REC(x, y, sawtooth))
 		wave = SAWTOOTH_WAVE;
+
+	if (wave > SAWTOOTH_WAVE)
+		return;
 
 	atomic_store(&plugin->params[p_wave], wave);
 	atomic_store(&plugin->params_dirty[p_wave], true);
@@ -899,8 +895,8 @@ static void change_waveform(synth_plugin_t *plugin, uint8_t p_wave, int x, int y
 /* Mouse press handling, starting drag if we are on a slider */
 void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y)
 {
-	uint32_t param_id = get_param_gui(plugin->gui->elements, x, y);
-	if (param_id >= 0 && param_id < P_COUNT)
+	uint32_t param_id = get_param_gui(plugin->gui->elements, (uint32_t)x, (uint32_t)y);
+	if (param_id < P_COUNT)
 	{
 		if (param_id == P_WAVE_A && 
 			!plugin->gui->elements.wave_a.entries_on)
@@ -995,6 +991,7 @@ bool is_api_supported(
 	const char *api, 
 	bool is_floating)
 {
+	(void)plugin;
 	return !strcmp(api, GUI_API) && !is_floating;
 }
 
@@ -1022,6 +1019,7 @@ bool create(const clap_plugin_t *plugin, const char *api, bool is_floating)
 void destroy(const clap_plugin_t *plugin)
 {
 	gui_destroy((synth_plugin_t *)plugin->plugin_data);
+	gui_font_free();
 }
 
 bool set_scale(const clap_plugin_t *plugin, double scale)
@@ -1085,7 +1083,7 @@ bool set_transient(
 	return false;
 }
 
-void suggest_title(const clap_plugin_t *plugin, const char *title) { }
+void suggest_title(const clap_plugin_t *plugin, const char *title) { (void)plugin; (void)title; }
 
 bool show(const clap_plugin_t *plugin)
 {

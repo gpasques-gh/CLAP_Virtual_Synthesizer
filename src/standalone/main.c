@@ -260,9 +260,9 @@ int main(int argc, char **argv)
 
 	/* Handle the MIDI interface initialization */
 	HMIDIIN midi_in;
-	uint8_t midi_valid = 1;
+	UINT midi_valid = 1;
 	LONG midi_id;
-	UINT midi_devices;
+	LONG midi_devices;
 
 	/* If the user specified MIDI input */
 	if (midi_input)
@@ -290,11 +290,11 @@ int main(int argc, char **argv)
 	if (midi_valid && midi_input)
 	{
 		/* Check the available MIDI devices */
-		for (UINT i = 0; i < midi_devices; i++)
+		for (LONG i = 0; i < midi_devices; i++)
 		{
 			MIDIINCAPS caps;
 			midiInGetDevCaps(i, &caps, sizeof(MIDIINCAPS));
-			printf("midi_device: [%u] %s\n", i, caps.szPname);
+			printf("midi_device: [%lu] %s\n", i, caps.szPname);
 		}
 
 		/* Initialize the MIDI queue */
@@ -400,7 +400,6 @@ int main(int argc, char **argv)
 	bool lfo_wave_ddm = false, lfo_params_ddm = false;
 	bool distortion_on = false, overdrive = false;
 	float distortion_amount = 0.0;
-	int active_voices = 0;
 
 	char preset_filename[1024] = "\0";
 

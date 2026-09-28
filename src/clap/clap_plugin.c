@@ -248,7 +248,7 @@ void process_event(
 }
 
 /* Apply gestures events */
-static void apply_gestures_events(synth_plugin_t *p, clap_output_events_t *out)
+static void apply_gestures_events(synth_plugin_t *p, const clap_output_events_t *out)
 {
 	for (uint32_t i = 0; i < P_COUNT; i++)
 	{
@@ -433,9 +433,9 @@ void plugin_on_main_thread(const clap_plugin_t *plugin)
 	(void)plugin;
 }
 
-const void posix_on_fd(const clap_plugin_t *plugin, int fd, clap_posix_fd_flags_t flags)
+void posix_on_fd(const clap_plugin_t *plugin, int fd, clap_posix_fd_flags_t flags)
 {
-	(void)flags;
+	(void)flags; (void)fd;
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
 	gui_on_POSIX_fd(p);
 }

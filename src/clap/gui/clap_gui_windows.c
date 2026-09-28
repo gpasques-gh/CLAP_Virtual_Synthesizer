@@ -31,7 +31,18 @@ LRESULT CALLBACK gui_window_procedure(
 	{
 		PAINTSTRUCT paint;
 		HDC dc = BeginPaint(window, &paint);
-		BITMAPINFO info = { { sizeof(BITMAPINFOHEADER), GUI_WIDTH, -GUI_HEIGHT, 1, 32, BI_RGB } };
+		BITMAPINFO info = 
+		{
+			.bmiHeader = 
+			{
+				.biSize = sizeof(BITMAPINFOHEADER),
+				.biWidth = GUI_WIDTH,
+				.biHeight = -GUI_HEIGHT,
+				.biPlanes = 1,
+				.biBitCount = 32,
+				.biCompression = BI_RGB,
+			}
+		};
 		StretchDIBits(dc, 0, 0, GUI_WIDTH, GUI_HEIGHT, 0, 0, GUI_WIDTH, GUI_HEIGHT, plugin->gui->bits, &info, DIB_RGB_COLORS, SRCCOPY);
 		EndPaint(window, &paint);
 		break;

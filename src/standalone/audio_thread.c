@@ -75,6 +75,7 @@ void CALLBACK waveOutProc(
 	DWORD_PTR param1,
 	DWORD_PTR param2)
 {
+	(void)wave_out; (void)param2;
 	if (msg == WOM_DONE)
 	{
 		audio_thread_ctx_t *ctx = (audio_thread_ctx_t *)instance;
@@ -159,7 +160,7 @@ void *audio_thread_proc(void *param)
 	{
 		/* Get MIDI events */
 		if (ctx->midi_valid)
-			get_midi(ctx->midi_in, &ctx->synth, NULL, NULL, NULL, NULL);
+			get_midi(ctx->midi_in, &ctx->synth);
 
 		/* Process the synthesizer sound data */
 		short local_buf[FRAMES];

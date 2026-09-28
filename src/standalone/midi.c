@@ -53,6 +53,7 @@ void CALLBACK MidiInProc(
 	DWORD_PTR param1, 
 	DWORD_PTR param2)
 {
+	(void)midi_in; (void)param2;
 	if (msg != MIM_DATA)
 		return;
 	
@@ -110,9 +111,8 @@ void poll_midi_queue(midi_queue_t *q, synth_t *synth)
  * Change the ADSR parameters when the assigned knobs are being triggered
  * Change the cutoff, detune and amplification when the assigned knobs are being triggered
  */
-int get_midi(snd_rawmidi_t *midi_in, synth_t *synth,
-			 float *attack, float *decay, float *sustain, float *release)
-{   
+int get_midi(snd_rawmidi_t *midi_in, synth_t *synth)
+{
 	unsigned char midi_buffer[1024];
 	ssize_t ret = snd_rawmidi_read(midi_in, midi_buffer, sizeof(midi_buffer));
 

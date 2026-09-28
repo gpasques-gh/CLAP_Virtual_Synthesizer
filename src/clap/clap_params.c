@@ -116,7 +116,7 @@ void apply_param_to_engine(
 	}
 }
 
-void flush_gui_params(synth_plugin_t *p, clap_output_events_t *out)
+void flush_gui_params(synth_plugin_t *p, const clap_output_events_t *out)
 {
 	for (clap_id id = 0; id < P_COUNT; id++)
 	{
@@ -263,8 +263,6 @@ static void params_flush(
 	const clap_input_events_t *in,
 	const clap_output_events_t *out)
 {
-	(void)out;
-
 	synth_plugin_t *p = plugin->plugin_data;
 	uint32_t count = in->size(in);
 
