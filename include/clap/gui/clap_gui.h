@@ -3,8 +3,8 @@
 #ifndef __CLAP_GUI_H__
 #define __CLAP_GUI_H__
 
-#define GUI_WIDTH (780)
-#define GUI_HEIGHT (400)
+#define GUI_WIDTH (572)
+#define GUI_HEIGHT (300)
 
 #define GRAY 0xC0C0C0
 #define BLACK 0x0000000
@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 
 typedef struct synth_plugin_s synth_plugin_t;
 

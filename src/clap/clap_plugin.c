@@ -304,6 +304,7 @@ clap_process_status plugin_process(
 	apply_gestures_events(p, process->out_events);
 
 	uint32_t frame = 0;
+
 	while (frame < frame_count)
 	{
 		/* Process incoming CLAP events */
