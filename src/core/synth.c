@@ -19,122 +19,85 @@ float adsr_process(adsr_t *adsr)
 	switch (adsr->state)
 	{
 	case ENV_IDLE:
-		return 0.0;
+		adsr->output = 0.0f;
 		break;
 	case ENV_ATTACK:
-		if (adsr->attack > 0.0)
-		{   /* Increment the amplification by the attack amount */
-			double increment = 1.0 / (adsr->attack * RATE);
-			adsr->output += increment;
-			if (adsr->output >= 1.0)
+		if (adsr->attack > 0.0f)
+		{
+			/* Increment the amplification by the attack amount */
+			adsr->output += 1.0f / (adsr->attack * RATE);
+			if (adsr->output >= 1.0f)
 			{
-				adsr->output = 1.0;
+				adsr->output = 1.0f;
 				adsr->state = ENV_DECAY;
 			}
 		}
-		else
-		{   /* If no attack, go in decay */
-			/* Logic for filter ADSR : 
-				- If there is decay, output = decay * 2 if decay is below 0.5, else output = 1.0
-				- If there is sustain and no decay, then output = sustain 
-				Avoiding clacky sound and better sounding filter ADSR in my opinion */
-			if (adsr->type == ENV_TYPE_FILTER &&
-					(adsr->decay > 0.0 || 
-					 adsr->sustain > 0.0 || 
-					 adsr->release > 0.0))
-			{
-				adsr->output = adsr->decay > 0.0 && adsr->decay <= 0.5 ? 
-					adsr->decay * 2.0 : 1.0; /* decay * 2 if decay in ]0.0..0.5] else 1.0 */
-				adsr->output = adsr->sustain > 0.0 && adsr->decay <= 0.0 ? 
-					adsr->sustain : adsr->output; /* sustain if sustain > 0.0 and decay < 0.0 */
-			}
-			else
-			{
-				adsr->output = adsr->decay;
-			}
+		else if (adsr->decay > 0.0f)
+		{
+			/* No attack and decay goes straight to decay */
+			adsr->output = 1.0f;
 			adsr->state = ENV_DECAY;
+		}
+		else
+		{
+			/* No attack and no decay goes straight to sustain */
+			adsr->output = adsr->sustain;
+			adsr->state = ENV_SUSTAIN;
 		}
 		break;
 	case ENV_DECAY:
-		if (adsr->decay > 0.0)
+		if (adsr->decay > 0.0f)
 		{
-			if (adsr->sustain > 0.0)
-			{   /* Decrement the amplification by the decay amount relatively to the sustain amount */
-				float decrement = (1.0 - adsr->sustain) / (adsr->decay * RATE);
-				adsr->output -= decrement;
-
-				if (adsr->output <= adsr->sustain)
-				{
-					adsr->output = adsr->sustain;
-					adsr->state = ENV_SUSTAIN;
-				}
-			}
-			else
-			{   /* Decrement the amplification by the decay amount relatively to the release amount */
-				float decrement = (1.0 - adsr->release) / (adsr->decay * RATE);
-				adsr->output -= decrement;
-
-				if (adsr->output <= adsr->release && adsr->release > 0.0)
-				{
-					adsr->output = adsr->release;
-					adsr->state = ENV_RELEASE;
-				}
-				else if (adsr->output <= 0.0)
-				{
-					adsr->output = 0.0;
-					adsr->state = ENV_RELEASE;
-				}
-			}
-		}
-		else
-		{   /* If there is sustain, go in sustain */
-			if (adsr->sustain > 0.0)
+			/* Decrement the amplification by the decay amount relatively to the sustain amount */
+			adsr->output -= (1.0f - adsr->sustain) / (adsr->decay * RATE);
+			if (adsr->output <= adsr->sustain)
 			{
 				adsr->output = adsr->sustain;
 				adsr->state = ENV_SUSTAIN;
 			}
-			/* Else go in release */
-			else
-			{
-				adsr->output = adsr->release;
-				adsr->state = ENV_RELEASE;
-			}
-		}
-		break;
-	case ENV_SUSTAIN:
-		if (adsr->sustain == 0.0)
-		{   /* Increment the amplification by the attack amount */
-			if (adsr->release > 0.0)
-			{
-				float decrement = adsr->output / (adsr->release * RATE);
-				adsr->output -= decrement;
-			}
-			adsr->state = ENV_RELEASE;
 		}
 		else
 		{
-			/* We put the amplification at the sustain level */
 			adsr->output = adsr->sustain;
+			adsr->state = ENV_SUSTAIN;
+		}
+		break;
+	case ENV_SUSTAIN:
+		if (adsr->sustain > 0.0f)
+		{
+			/* Hold the amplification at the sustain amount */
+			adsr->output = adsr->sustain;
+		}
+		else
+		{
+			/* Fall into release from the current level */
+			adsr->state = ENV_RELEASE;
 		}
 		break;
 	case ENV_RELEASE:
-		if (adsr->release > 0.0)
-		{   /* Decrement the amplification by the release amount */
-			float decrement = adsr->output / (adsr->release * RATE);
-			adsr->output -= decrement;
-			if (adsr->output <= 0.001)
+		if (adsr->release > 0.0f)
+		{
+			/* Release acts as a time constant */
+			adsr->output -= adsr->output / (adsr->release * RATE);;
+			if (adsr->output <= 0.001f)
 			{
-				adsr->output = 0.0;
+				adsr->output = 0.0f;
 				adsr->state = ENV_IDLE;
 			}
 		}
 		else
-		{   /* If no release, go in idle state */
-			adsr->output = 0.0;
+		{
+			/* If no release, go in idle state */
+			adsr->output = 0.0f;
 			adsr->state = ENV_IDLE;
 		}
 		break;
+	default:
+		adsr->output = 0.0f;
+		adsr->state = ENV_IDLE;
+		break;
 	}
+	
 	/* Return the amplification of the ADSR envelope */
 	return adsr->output;
 }
