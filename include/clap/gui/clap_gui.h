@@ -65,7 +65,9 @@ typedef struct
 	slider_t filter_adsr_sliders[4];
 	checkbox_t filter_env_on_box;
 
-	menu_t waveforms;
+	menu_t wave_a;
+	menu_t wave_b;
+	menu_t wave_c;
 } gui_elements_t;
 
 typedef struct 

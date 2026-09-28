@@ -50,7 +50,7 @@
 #define ARTURIA_AMPLITUDE_KNOB 85
 
 /* Note and synth related */
-#define VOICES 6
+#define VOICES 16
 #define DEFAULT_OCTAVE 4
 #define A_4 440
 #define RATE 44100
