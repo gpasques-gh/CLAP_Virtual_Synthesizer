@@ -142,10 +142,10 @@ static void plugin_paint_rec(uint32_t *bits, rectangle_t rec)
 		for (uint32_t x = rec.left; x < rec.right; x++)
 		{
 			bits[y * GUI_WIDTH + x] =  (
-				y == rec.top || 
-				y == rec.bottom - 1 || 
-				x == rec.left ||
-				x == rec.right - 1)
+				y <= rec.top + rec.border_width - 1 || 
+				y >= rec.bottom - rec.border_width || 
+				x <= rec.left + rec.border_width - 1 ||
+				x >= rec.right - rec.border_width)
 					? rec.border_color
 					: rec.fill_color;
 		}
@@ -166,7 +166,8 @@ static void render_white_keys(uint32_t *bits)
 			.top = GUI_HEIGHT - GUI_HEIGHT / 6,
 			.bottom = GUI_HEIGHT,
 			.border_color = BLACK,
-			.fill_color = 0xFFFFFF
+			.fill_color = WHITE,
+			.border_width = 1
 		};
 		plugin_paint_rec(bits, key);
 	}
@@ -195,7 +196,8 @@ static void render_black_keys(uint32_t *bits)
 					.top = (GUI_HEIGHT - GUI_HEIGHT / 6),
 					.bottom = ((GUI_HEIGHT - GUI_HEIGHT / 6) + GUI_HEIGHT / 10),
 					.border_color = BLACK,
-					.fill_color = BLACK 
+					.fill_color = BLACK,
+					.border_width = 1
 				};
 				plugin_paint_rec(bits, key);
 				
@@ -246,6 +248,7 @@ void render_key(uint32_t *bits, uint8_t midi_note)
 
 	key.fill_color = GRAY;
 	key.border_color = BLACK;
+	key.border_width = 1;
 
 	plugin_paint_rec(bits, key);
 }
@@ -437,7 +440,7 @@ static rectangle_t compute_horizontal_slider_rec(
 		.bottom = main_rec.bottom,
 		.left = main_rec.left + (uint32_t)(travel * value),
 		.right = main_rec.left + width + (uint32_t)(travel * value),
-		.border_color = BLACK, .fill_color = GRAY
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1
 	};
 }
 
@@ -457,32 +460,37 @@ static void create_waveform_menu(
 	uint32_t param_id)
 {
 	/* Waveform drop down menu */
-	rectangle_t waveform_base_rec = {l, r, t, b, bc, fc};
+	rectangle_t waveform_base_rec = {
+		.left = l, .right = r, 
+		.top = t, .bottom = b, 
+		.border_color = bc, .fill_color = fc,
+		.border_width = 1};
+
 	menu->base_rec = waveform_base_rec;
 	menu->entries_on = false;
 	menu->param_id = param_id;
 
 	menu->entries[SINE_WAVE].val = SINE_WAVE;
-	menu->entries[SINE_WAVE].name = "Sine wave";
+	menu->entries[SINE_WAVE].name = "Sine";
 	menu->entries[SINE_WAVE].rec = waveform_base_rec;
 
 	menu->entries[SQUARE_WAVE].val = SQUARE_WAVE;
-	menu->entries[SQUARE_WAVE].name = "Square wave";
+	menu->entries[SQUARE_WAVE].name = "Square";
 	menu->entries[SQUARE_WAVE].rec = waveform_base_rec;
-	menu->entries[SQUARE_WAVE].rec.top += 40;
-	menu->entries[SQUARE_WAVE].rec.bottom += 40;
+	menu->entries[SQUARE_WAVE].rec.top += 30;
+	menu->entries[SQUARE_WAVE].rec.bottom += 30;
 	
 	menu->entries[TRIANGLE_WAVE].val = TRIANGLE_WAVE;
-	menu->entries[TRIANGLE_WAVE].name = "Triangle wave";
+	menu->entries[TRIANGLE_WAVE].name = "Triangle";
 	menu->entries[TRIANGLE_WAVE].rec = waveform_base_rec;
-	menu->entries[TRIANGLE_WAVE].rec.top += 80;
-	menu->entries[TRIANGLE_WAVE].rec.bottom += 80;
+	menu->entries[TRIANGLE_WAVE].rec.top += 60;
+	menu->entries[TRIANGLE_WAVE].rec.bottom += 60;
 
 	menu->entries[SAWTOOTH_WAVE].val = SAWTOOTH_WAVE;
-	menu->entries[SAWTOOTH_WAVE].name = "Sawtooth wave";
+	menu->entries[SAWTOOTH_WAVE].name = "Sawtooth";
 	menu->entries[SAWTOOTH_WAVE].rec = waveform_base_rec;
-	menu->entries[SAWTOOTH_WAVE].rec.top += 120;
-	menu->entries[SAWTOOTH_WAVE].rec.bottom += 120;
+	menu->entries[SAWTOOTH_WAVE].rec.top += 90;
+	menu->entries[SAWTOOTH_WAVE].rec.bottom += 90;
 
 	menu->selected = menu->entries[0];
 }
@@ -503,92 +511,114 @@ void gui_create_elements(synth_plugin_t *plugin)
 	float cutoff = atomic_load(&plugin->params[P_CUTOFF]);
 	bool f_env_on = atomic_load(&plugin->params[P_FILTER_ENV_ON]);
 
-	/* Amplification slider */
-	rectangle_t amp_rec = { 10, 110, 10, 50, BLACK, GRAY};
-	plugin->gui->elements.volume_slider.rec = amp_rec;
-	plugin->gui->elements.volume_slider.rec_value = 
-		compute_horizontal_slider_rec(amp_rec, 20, amp, 1.0f);
-	plugin->gui->elements.volume_slider.param_value = amp;
-
 	/* Attack slider */
-	rectangle_t attack_rec = { 10, 110, 80, 120, BLACK, GRAY};
+	rectangle_t attack_rec = { 
+		.left = 40, .right = 140, .top = 40, .bottom = 70, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[0].rec = attack_rec;
 	plugin->gui->elements.adsr_sliders[0].rec_value = 
 		compute_horizontal_slider_rec(attack_rec, 20, attack, 2.0f);
 	plugin->gui->elements.adsr_sliders[0].param_value = attack;
 
 	/* Decay slider */
-	rectangle_t decay_rec = { 10, 110, 140, 180, BLACK, GRAY};
+	rectangle_t decay_rec = { 
+		.left = 40, .right = 140, .top = 90, .bottom = 120, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[1].rec = decay_rec;
 	plugin->gui->elements.adsr_sliders[1].rec_value = 
 		compute_horizontal_slider_rec(decay_rec, 20, decay, 2.0f);
 	plugin->gui->elements.adsr_sliders[1].param_value = decay;
 
 	/* Sustain slider */
-	rectangle_t sustain_rec = { 10, 110, 200, 240, BLACK, GRAY};
+	rectangle_t sustain_rec = { 
+		.left = 160, .right = 260, .top = 40, .bottom = 70, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[2].rec = sustain_rec;
 	plugin->gui->elements.adsr_sliders[2].rec_value = 
 		compute_horizontal_slider_rec(sustain_rec, 20, sustain, 1.0f);
 	plugin->gui->elements.adsr_sliders[2].param_value = sustain;
 
 	/* Release slider */
-	rectangle_t release_rec = { 10, 110, 260, 300, BLACK, GRAY};
+	rectangle_t release_rec = { 
+		.left = 160, .right = 260, .top = 90, .bottom = 120, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[3].rec = release_rec;
 	plugin->gui->elements.adsr_sliders[3].rec_value = 
 		compute_horizontal_slider_rec(release_rec, 20, release, 2.0f);
 	plugin->gui->elements.adsr_sliders[3].param_value = release;
 
 	/* Filter Attack slider */
-	rectangle_t f_attack_rec = { 140, 240, 80, 120, BLACK, GRAY};
+	rectangle_t f_attack_rec = { 
+		.left = 400, .right = 500, .top = 40, .bottom = 70, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[0].rec = f_attack_rec;
 	plugin->gui->elements.filter_adsr_sliders[0].rec_value = 
 		compute_horizontal_slider_rec(f_attack_rec, 20, f_attack, 2.0f);
 	plugin->gui->elements.filter_adsr_sliders[0].param_value = f_attack;
 
 	/* Filter Decay slider */
-	rectangle_t f_decay_rec = { 140, 240, 140, 180, BLACK, GRAY};
+	rectangle_t f_decay_rec = { 
+		.left = 400, .right = 500, .top = 90, .bottom = 120, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[1].rec = f_decay_rec;
 	plugin->gui->elements.filter_adsr_sliders[1].rec_value = 
 		compute_horizontal_slider_rec(f_decay_rec, 20, f_decay, 2.0f);
 	plugin->gui->elements.filter_adsr_sliders[1].param_value = f_decay;
 
 	/* Filter Sustain slider */
-	rectangle_t f_sustain_rec = { 140, 240, 200, 240, BLACK, GRAY};
+	rectangle_t f_sustain_rec = { 
+		.left = 520, .right = 620, .top = 40, .bottom = 70, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[2].rec = f_sustain_rec;
 	plugin->gui->elements.filter_adsr_sliders[2].rec_value = 
 		compute_horizontal_slider_rec(f_sustain_rec, 20, f_sustain, 1.0f);
 	plugin->gui->elements.filter_adsr_sliders[2].param_value = f_sustain;
 
 	/* Filter Release slider */
-	rectangle_t f_release_rec = { 140, 240, 260, 300, BLACK, GRAY};
+	rectangle_t f_release_rec = { 
+		.left = 520, .right = 620, .top = 90, .bottom = 120, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[3].rec = f_release_rec;
 	plugin->gui->elements.filter_adsr_sliders[3].rec_value = 
 		compute_horizontal_slider_rec(f_release_rec, 20, f_release, 2.0f);
 	plugin->gui->elements.filter_adsr_sliders[3].param_value = f_release;
 
+	/* Amplification slider */
+	rectangle_t amp_rec = { 
+		.left = 400, .right = 500, .top = 160, .bottom = 190, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	plugin->gui->elements.volume_slider.rec = amp_rec;
+	plugin->gui->elements.volume_slider.rec_value = 
+		compute_horizontal_slider_rec(amp_rec, 20, amp, 1.0f);
+	plugin->gui->elements.volume_slider.param_value = amp;
+
 	/* Cutoff slider */
-	rectangle_t cutoff_rec = { 140, 240, 320, 360, BLACK, GRAY};
+	rectangle_t cutoff_rec = { 
+		.left = 520, .right = 620, .top = 160, .bottom = 190, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.cutoff_slider.rec = cutoff_rec;
 	plugin->gui->elements.cutoff_slider.rec_value = 
 		compute_horizontal_slider_rec(cutoff_rec, 20, cutoff, 1.0f);
 	plugin->gui->elements.cutoff_slider.param_value = cutoff;
 
-	rectangle_t env_on_rec = {300, 340, 100, 140, GRAY, GRAY};
+	rectangle_t env_on_rec = { 
+		.left = 520, .right = 550, .top = 210, .bottom = 240, 
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_env_on_box.rec = env_on_rec;
 	plugin->gui->elements.filter_env_on_box.param_value = f_env_on;
 
 
 	create_waveform_menu(
 		&plugin->gui->elements.wave_a,
-		300, 400, 10, 50, BLACK, GRAY, P_WAVE_A);
+		40, 100, 160, 190, BLACK, GRAY, P_WAVE_A);
 
 	create_waveform_menu(
 		&plugin->gui->elements.wave_b,
-		420, 520, 10, 50, BLACK, GRAY, P_WAVE_B);
+		110, 170, 160, 190, BLACK, GRAY, P_WAVE_B);
 
 	create_waveform_menu(
 		&plugin->gui->elements.wave_c,
-		540, 650, 10, 50, BLACK, GRAY, P_WAVE_C);
+		180, 240, 160, 190, BLACK, GRAY, P_WAVE_C);
 	
 	
 	/* Load the font from the asset header */
@@ -690,7 +720,8 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 	{
 		.left = 0, .right = GUI_WIDTH,
 		.top = 0, .bottom = GUI_HEIGHT,
-		.border_color = BLACK, .fill_color = BLACK
+		.border_color = BLACK, .fill_color = WHITE,
+		.border_width = 1
 	};
 	
 	plugin_paint_rec(bits, background);

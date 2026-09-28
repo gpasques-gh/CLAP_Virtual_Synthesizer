@@ -8,6 +8,8 @@
 
 #define GRAY 0xC0C0C0
 #define BLACK 0x0000000
+#define WHITE 0xFFFFFFF
+#define LIGHT_BLUE 0x90D5FF
 
 #include <stdint.h>
 #include <stdbool.h>
