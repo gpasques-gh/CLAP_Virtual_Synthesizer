@@ -2,51 +2,52 @@
     "configurations": [
         {
             "name": "Linux",
-            "compileCommands":
-                "${workspaceFolder}/.vscode/compile_commands.linux.json",
             "includePath": [
-                "external/",
-                "include/"
+                "${workspaceFolder}/external/",
+                "${workspaceFolder}/include/"
             ],
+            "defines": ["__LINUX__"],
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/gcc"
         },
         {
             "name": "Win32",
-            "compileCommands":
-                "${workspaceFolder}/.vscode/compile_commands.win32.json",
             "includePath": [
-                "external/",
-                "include/"
+                "${workspaceFolder}/external/",
+                "${workspaceFolder}/include/",
+                "${workspaceFolder}/external/libxml/include"
             ],
+            "defines": ["__WINDOWS__"],
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-gcc-x64"
+            "intelliSenseMode": "windows-gcc-x64",
+            "compilerPath": "gcc"
         },
         {
             "name": "CLAP_Win32",
-            "compileCommands":
-                "${workspaceFolder}/.vscode/compile_commands.clap.win32.json",
             "includePath": [
-                "external/",
-                "include/"
+                "${workspaceFolder}/external/",
+                "${workspaceFolder}/include/"
             ],
+            "defines": ["__CLAP__"],
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"        
+            "intelliSenseMode": "windows-gcc-x64",
+            "compilerPath": "gcc"
         },
         {
             "name": "CLAP_Linux",
-            "compileCommands":
-                "${workspaceFolder}/.vscode/compile_commands.clap.linux.json",
             "includePath": [
-                "external/",
-                "include/"
+                "${workspaceFolder}/external/",
+                "${workspaceFolder}/include/"
             ],
+            "defines": ["__CLAP__"],
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"        
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/gcc"
         }
     ],
     "version": 4
