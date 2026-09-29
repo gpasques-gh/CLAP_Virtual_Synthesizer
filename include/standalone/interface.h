@@ -1,3 +1,5 @@
+#ifdef __STANDALONE__
+
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
@@ -55,4 +57,5 @@ void get_key_position(int midi_note, int *x, int *y,
 /* Returns if a MIDI note is a assigned to a black key or not */
 int is_black_key(int midi_note);
 
-#endif
+#endif /* HEADER GUARD */
+#endif /* __STANDALONE__ */

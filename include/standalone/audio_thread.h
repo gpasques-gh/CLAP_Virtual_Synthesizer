@@ -1,3 +1,5 @@
+#ifdef __STANDALONE__
+
 #ifndef __AUDIO_THREAD_H__
 #define __AUDIO_THREAD_H__
 
@@ -103,3 +105,4 @@ void *audio_thread_proc(void *param);
 
 #endif /* __WINDOWS__ */
 #endif /* __AUDIO_THREAD_H__ */
+#endif /* __STANDALONE__ */

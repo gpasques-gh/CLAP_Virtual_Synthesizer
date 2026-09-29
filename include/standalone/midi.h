@@ -1,3 +1,5 @@
+#ifdef __STANDALONE__
+
 #ifndef MIDI_H
 #define MIDI_H
 
@@ -57,3 +59,4 @@ int get_midi(snd_rawmidi_t *midi_in, synth_t *synth);
 
 #endif /* OS */
 #endif /* MIDI_H */
+#endif /* __STANDALONE__ */

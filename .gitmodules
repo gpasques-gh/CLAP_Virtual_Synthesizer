@@ -10,3 +10,6 @@
 [submodule "external/lib_stb"]
 	path = external/lib_stb
 	url = https://github.com/nothings/stb.git
+[submodule "external/lib_lv2"]
+	path = external/lib_lv2
+	url = https://github.com/lv2/lv2.git

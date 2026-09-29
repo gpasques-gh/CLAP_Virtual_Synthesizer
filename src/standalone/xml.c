@@ -1,4 +1,4 @@
-#ifndef __CLAP__
+#ifdef __STANDALONE__
 
 #ifdef __WINDOWS__
 

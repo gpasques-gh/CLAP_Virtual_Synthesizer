@@ -1,4 +1,4 @@
-#ifndef __CLAP__
+#ifdef STANDALONE
 
 #include <stdint.h>
 

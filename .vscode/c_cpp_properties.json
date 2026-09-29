@@ -6,7 +6,7 @@
                 "${workspaceFolder}/external/",
                 "${workspaceFolder}/include/"
             ],
-            "defines": ["__LINUX__"],
+            "defines": ["__LINUX__", "__STANDALONE__"],
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64",
@@ -17,9 +17,10 @@
             "includePath": [
                 "${workspaceFolder}/external/",
                 "${workspaceFolder}/include/",
-                "${workspaceFolder}/external/libxml/include"
+                "${workspaceFolder}/external/libxml/include",
+                "${workspaceFolder}/external/lib_raylib/src/"
             ],
-            "defines": ["__WINDOWS__"],
+            "defines": ["__WINDOWS__", "__STANDALONE__"],
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-gcc-x64",
@@ -48,6 +49,19 @@
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64",
             "compilerPath": "/usr/bin/gcc"
+        },
+        {
+            "name": "LV2",
+            "includePath": [
+                "${workspaceFolder}/external/",
+                "${workspaceFolder}/include/",
+                "${workspaceFolder}/external/lib_lv2/include"
+            ],
+            "defines": ["__LV2__"],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64",
+            "compilerPath": "gcc"
         }
     ],
     "version": 4

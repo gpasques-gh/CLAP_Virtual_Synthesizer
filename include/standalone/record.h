@@ -1,3 +1,5 @@
+#ifdef __STANDALONE__
+
 #ifndef RECORD_H
 #define RECORD_H
 
@@ -30,4 +32,5 @@ int init_wav_file(char *fname, FILE **fwav, wav_header_t *header);
 /* Close a wav file */
 int close_wav_file(FILE *fwav);
 
-#endif 
+#endif /* HEADER GUARD */
+#endif /* __STANDALONE__ */

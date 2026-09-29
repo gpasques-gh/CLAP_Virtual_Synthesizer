@@ -1,3 +1,5 @@
+#ifdef __STANDALONE__
+
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
@@ -21,4 +23,5 @@ void assign_note(synth_t *synth, int midi_note);
 /* Release a note from a synth voice, does nothing if note is not pressed */
 void release_note(synth_t *synth, int midi_note);
 
-#endif
+#endif /* HEADER GUARD */
+#endif /* __STANDALONE__ */

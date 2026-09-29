@@ -1,3 +1,5 @@
+#ifdef __STANDALONE__
+
 #ifdef __WINDOWS__
 
 #ifndef __WINDEFS__
@@ -8,5 +10,6 @@
 #define NOGDI
 #define NOUSER
 
-#endif
-#endif
+#endif /* __WINDEFS__ */
+#endif /* __WINDOWS__ */
+#endif /* __STANDALONE__ */

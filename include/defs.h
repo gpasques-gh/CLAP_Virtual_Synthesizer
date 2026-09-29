@@ -1,7 +1,7 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#ifndef __CLAP__
+#ifdef __STANDALONE__
 #if !defined(__NO_RL__)
 #include "lib_raylib/src/raylib.h"
 #endif /* NO RAYLIB */
@@ -74,7 +74,7 @@
 #define NUM_BUFFERS 4
 #endif
 
-#ifndef __CLAP__
+#ifdef __STANDALONE__
 
 /* Keyboard layouts */
 #define QWERTY 0
@@ -112,7 +112,7 @@
 #define WIDTH 1769
 #define HEIGHT 800
 #define TITLE "ALSA & raygui Synthesizer"
-#endif /* __CLAP__ */
+#endif /* __STANDALONE__ */
 
 /* MIDI piano visualizer */
 #define WHITE_KEYS 52
