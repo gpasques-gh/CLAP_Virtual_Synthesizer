@@ -83,11 +83,12 @@ void gui_create(synth_plugin_t *plugin)
         (uint8_t *) embed_info_data, 2);
     
     /* Set the size of the window */
-    XSizeHints size_hints = {0};
-    size_hints.flags = PMinSize | PMaxSize;
-    size_hints.min_width = size_hints.max_width = GUI_WIDTH;
-    size_hints.min_height = size_hints.max_height = GUI_HEIGHT;
-    XSetWMNormalHints(plugin->gui->display, plugin->gui->window, &size_hints);
+    XSizeHints *size_hints = XAllocSizeHints();
+    size_hints->flags = PMinSize | PMaxSize;
+    size_hints->min_width = size_hints->max_width = GUI_WIDTH;
+    size_hints->min_height = size_hints->max_height = GUI_HEIGHT;
+    XSetWMNormalHints(plugin->gui->display, plugin->gui->window, size_hints);
+    XFree(size_hints);
 
     /* Select the events the window will receive */
     XSelectInput(plugin->gui->display, plugin->gui->window, INPUTS);

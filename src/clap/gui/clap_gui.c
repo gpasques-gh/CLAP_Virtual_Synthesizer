@@ -1093,6 +1093,7 @@ bool get_size(
 bool can_resize(const clap_plugin_t *plugin)
 {
 	(void)plugin;
+	fprintf(stderr, "can_resize called\n");
 	return false;
 }
 
@@ -1101,6 +1102,11 @@ bool get_resize_hints(
 	clap_gui_resize_hints_t *hints)
 {
 	(void)plugin; (void)hints;
+	hints->can_resize_horizontally = false;
+	hints->can_resize_vertically = false;
+	hints->preserve_aspect_ratio = false;
+	hints->aspect_ratio_width = GUI_WIDTH;
+	hints->aspect_ratio_height = GUI_HEIGHT;
 	return false;
 }
 
@@ -1108,15 +1114,18 @@ bool adjust_size(
 	const clap_plugin_t *plugin, 
 	uint32_t *w, uint32_t *h)
 {
-	return get_size(plugin, w, h);
+	(void)plugin;
+	*w = GUI_WIDTH;
+	*h = GUI_HEIGHT;
+	return true;
 }
 
 bool set_size(
 	const clap_plugin_t *plugin, 
 	uint32_t w, uint32_t h)
 {
-	(void)plugin; (void)w; (void)h; 
-	return true;
+	(void)plugin;
+	return w == GUI_WIDTH && h == GUI_HEIGHT;
 }
 
 bool set_parent(

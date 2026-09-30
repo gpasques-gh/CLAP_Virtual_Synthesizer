@@ -54,6 +54,7 @@ static bool stream_read_all(const clap_istream_t *s, void *buf, uint64_t size)
 	return true;
 }
 
+/* Save the state of the plugin */
 static bool state_save(const clap_plugin_t *plugin, const clap_ostream_t *stream)
 {
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
@@ -73,6 +74,7 @@ static bool state_save(const clap_plugin_t *plugin, const clap_ostream_t *stream
 	return true;
 }
 
+/* Load the state of the plugin */
 static bool state_load(const clap_plugin_t *plugin, const clap_istream_t *stream)
 {
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
