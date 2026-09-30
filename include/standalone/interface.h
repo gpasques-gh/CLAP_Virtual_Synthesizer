@@ -5,7 +5,7 @@
 
 /* Render the ADSR envelope sliders */
 void render_adsr(
-	float *attack, float *decay, 
+	float *attack, float *decay,
 	float *sustain, float *release);
 
 /* Render the filter ADSR envelope sliders */
@@ -15,7 +15,7 @@ void render_filter_adsr(
 
 /* Render the oscillators waveforms dropdown menus*/
 void render_osc_waveforms(
-	int *wave_a, int *wave_b, int *wave_c, 
+	int *wave_a, int *wave_b, int *wave_c,
 	bool *ddm_a, bool *ddm_b, bool *ddm_c);
 
 /* Render the synthesizer parameters */
@@ -30,7 +30,7 @@ void render_options(
 
 /* Render the effects parameters */
 void render_effects(
-	synth_t *synth, 
+	synth_t *synth,
 	bool *lfo_wave_ddm, bool *lfo_params_ddm,
 	bool *distortion, bool *overdrive,
 	float *distortion_amount);
@@ -44,7 +44,7 @@ void render_white_keys();
 /* Render the black keys from the MIDI piano visualizer */
 void render_black_keys();
 
-/* Renders given note into a pressed key in the MIDI piano visualizer 
+/* Renders given note into a pressed key in the MIDI piano visualizer
 Render the key in a different color if it's the current arpeggio key */
 void render_key(int midi_note, bool arp);
 

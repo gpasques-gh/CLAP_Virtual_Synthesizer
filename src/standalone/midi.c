@@ -12,7 +12,7 @@
 /* MIDI event either come directly from the main loop in Linux */
 /* Or from the MIDIIN thread and MIDI queue polling in Windows */
 static void __apply_midi_event(
-	synth_t *synth, 
+	synth_t *synth,
 	uint8_t status,
 	uint8_t data1,
 	uint8_t data2)
@@ -25,7 +25,7 @@ static void __apply_midi_event(
 	}
 	/* If the MIDI message is a NOTE OFF */
 	else if ((status & PRESSED) == NOTE_OFF ||
-				((status & PRESSED) == NOTE_ON && data2 == 0))
+			 ((status & PRESSED) == NOTE_ON && data2 == 0))
 	{
 		/* Depress a voice with the given note */
 		voice_off(synth, data1);
@@ -47,19 +47,20 @@ void midi_queue_init(midi_queue_t *q)
 
 /* Callback function for the HMIDIIN */
 void CALLBACK MidiInProc(
-	HMIDIIN midi_in, 
-	UINT msg, 
-	DWORD_PTR instance, 
-	DWORD_PTR param1, 
+	HMIDIIN midi_in,
+	UINT msg,
+	DWORD_PTR instance,
+	DWORD_PTR param1,
 	DWORD_PTR param2)
 {
-	(void)midi_in; (void)param2;
+	(void)midi_in;
+	(void)param2;
 	if (msg != MIM_DATA)
 		return;
-	
+
 	/* Get the MIDI queue */
 	midi_queue_t *q = (midi_queue_t *)instance;
-	
+
 	/* Get the MIDI message bytes */
 	BYTE status = param1 & 0xFF;
 	BYTE data1 = (param1 >> 8) & 0xFF;
@@ -83,7 +84,7 @@ void CALLBACK MidiInProc(
 	InterlockedExchange(&q->head, next);
 }
 
-/* Poll the MIDI queue for new MIDI events 
+/* Poll the MIDI queue for new MIDI events
 and apply them to the synthesizer */
 /* This function is called from the audio thread */
 void poll_midi_queue(midi_queue_t *q, synth_t *synth)
@@ -120,9 +121,9 @@ int get_midi(snd_rawmidi_t *midi_in, synth_t *synth)
 	{
 		return 1;
 	}
-		
+
 	for (int i = 0; i + 2 < ret; i += 3)
-	{   /* Getting the MIDI bytes informations */
+	{ /* Getting the MIDI bytes informations */
 		unsigned char status = midi_buffer[i];
 		unsigned char data1 = midi_buffer[i + 1];
 		unsigned char data2 = midi_buffer[i + 2];

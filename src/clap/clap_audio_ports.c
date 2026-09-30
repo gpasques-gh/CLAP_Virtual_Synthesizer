@@ -7,7 +7,7 @@
 #include "clap/clap_audio_ports.h"
 
 uint32_t audio_ports_count(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	bool is_input)
 {
 	(void)plugin;
@@ -23,10 +23,10 @@ bool audio_ports_get(
 {
 	(void)plugin;
 	(void)is_input;
-	
+
 	if (index != 0)
 		return false;
-	
+
 	info->id = 0;
 	snprintf(info->name, sizeof(info->name), "%s", "Stereo");
 	info->channel_count = 2;
@@ -36,4 +36,4 @@ bool audio_ports_get(
 	return true;
 }
 
-#endif 
+#endif

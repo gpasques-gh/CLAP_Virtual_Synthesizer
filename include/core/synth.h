@@ -43,7 +43,7 @@ typedef struct
 	int wave;
 } osc_t;
 
-typedef struct 
+typedef struct
 {
 	osc_t osc;
 	int mod_param;
@@ -78,7 +78,7 @@ typedef struct
  * Amplification is between 0.0 and 1.0
  * The LFO variables are used when the LFO is modulating the base variable
  * The active_arp variable is the index of the current active voice from the arpeggio
- * The active_arp_float is a number between 0 and 1 
+ * The active_arp_float is a number between 0 and 1
  * used to move from beat to beat on the arpeggio
  */
 typedef struct
@@ -161,7 +161,7 @@ void update_synth_envelope(
 	float a, float d, float s, float r);
 
 void update_synth_oscillators(
-	synth_t *synth, 
+	synth_t *synth,
 	int w_a, int w_b, int w_c);
 
 #endif

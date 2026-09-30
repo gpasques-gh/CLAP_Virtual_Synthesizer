@@ -18,10 +18,13 @@
 static double clamp_param_value(clap_id id, double value)
 {
 	const param_desc_t *desc = param_desc_from_id(id);
-	if (!desc) return value;
-	
-	if (value < desc->min) value = desc->min;
-	if (value > desc->max) value = desc->max;
+	if (!desc)
+		return value;
+
+	if (value < desc->min)
+		value = desc->min;
+	if (value > desc->max)
+		value = desc->max;
 
 	if (desc->flags & CLAP_PARAM_IS_STEPPED)
 		value = (double)(int)value;
@@ -36,8 +39,10 @@ static bool stream_write_all(const clap_ostream_t *s, const void *buf, uint64_t 
 	while (size > 0)
 	{
 		int64_t n = s->write(s, ptr, size);
-		if (n <= 0) return false;
-		ptr += n; size -= (uint64_t)n;
+		if (n <= 0)
+			return false;
+		ptr += n;
+		size -= (uint64_t)n;
 	}
 	return true;
 }
@@ -48,8 +53,10 @@ static bool stream_read_all(const clap_istream_t *s, void *buf, uint64_t size)
 	while (size > 0)
 	{
 		int64_t n = s->read(s, ptr, size);
-		if (n <= 0) return false;
-		ptr += n; size -= (uint64_t)n;
+		if (n <= 0)
+			return false;
+		ptr += n;
+		size -= (uint64_t)n;
 	}
 	return true;
 }
@@ -60,10 +67,10 @@ static bool state_save(const clap_plugin_t *plugin, const clap_ostream_t *stream
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
 
 	/* Save the state headers */
-	uint32_t header[3] = { STATE_MAGIC, STATE_VERSION, P_COUNT };
+	uint32_t header[3] = {STATE_MAGIC, STATE_VERSION, P_COUNT};
 	if (!stream_write_all(stream, header, sizeof(header)))
 		return false;
-	
+
 	/* Save all parameters data */
 	for (uint32_t i = 0; i < P_COUNT; i++)
 	{
@@ -90,7 +97,7 @@ static bool state_load(const clap_plugin_t *plugin, const clap_istream_t *stream
 	uint32_t count = header[2];
 	if (count > P_COUNT)
 		count = P_COUNT;
-	
+
 	/* Read all the parameters */
 	for (uint32_t i = 0; i < count; i++)
 	{
@@ -112,45 +119,41 @@ static bool state_load(const clap_plugin_t *plugin, const clap_istream_t *stream
 }
 
 static const clap_plugin_state_t state_ext =
-{
-	.save = state_save,
-	.load = state_load,
+	{
+		.save = state_save,
+		.load = state_load,
 };
 
 static const clap_plugin_audio_ports_t audio_ports_ext =
-{
-	.count = audio_ports_count,
-	.get = audio_ports_get
-};
+	{
+		.count = audio_ports_count,
+		.get = audio_ports_get};
 
 static const clap_plugin_note_ports_t note_ports_ext =
-{
-	.count = note_ports_count,
-	.get = note_ports_get
-};
+	{
+		.count = note_ports_count,
+		.get = note_ports_get};
 
 /* Synth CLAP plugin features */
 const char *__features[] =
-{
-	CLAP_PLUGIN_FEATURE_INSTRUMENT,
-	CLAP_PLUGIN_FEATURE_SYNTHESIZER,
-	NULL
-};
+	{
+		CLAP_PLUGIN_FEATURE_INSTRUMENT,
+		CLAP_PLUGIN_FEATURE_SYNTHESIZER,
+		NULL};
 
 /* Synth CLAP plugin descriptors */
 const clap_plugin_descriptor_t __descriptor =
-{
-	.clap_version = CLAP_VERSION_INIT,
-	.id = "com.example.midi-synth",
-	.name = "Raygui Synth - CLAP Version",
-	.vendor = "gpasques-gh",
-	.url = "github.com/gpasques-gh/ALSA_raygui_Synthesizer.git",
-	.manual_url = "",
-	.support_url = "",
-	.version = "1.0.0",
-	.description = "Minimal CLAP MIDI Synth",
-	.features = __features
-};
+	{
+		.clap_version = CLAP_VERSION_INIT,
+		.id = "com.example.midi-synth",
+		.name = "Raygui Synth - CLAP Version",
+		.vendor = "gpasques-gh",
+		.url = "github.com/gpasques-gh/ALSA_raygui_Synthesizer.git",
+		.manual_url = "",
+		.support_url = "",
+		.version = "1.0.0",
+		.description = "Minimal CLAP MIDI Synth",
+		.features = __features};
 
 /* Free the synthesizer */
 static void synth_free(const clap_plugin_t *plugin)
@@ -181,11 +184,11 @@ static int synth_alocate(const clap_plugin_t *plugin)
 
 	/* Initialize the POSIX and HostParams extensions */
 	p->host_params = (const clap_host_params_t *)
-		p->host->get_extension(p->host, CLAP_EXT_PARAMS);
+						 p->host->get_extension(p->host, CLAP_EXT_PARAMS);
 	p->host_POSIX_support = (const clap_host_posix_fd_support_t *)
-		p->host->get_extension(p->host, CLAP_EXT_POSIX_FD_SUPPORT);
+								p->host->get_extension(p->host, CLAP_EXT_POSIX_FD_SUPPORT);
 	p->host_timer_support = (const clap_host_timer_support_t *)
-		p->host->get_extension(p->host, CLAP_EXT_TIMER_SUPPORT);
+								p->host->get_extension(p->host, CLAP_EXT_TIMER_SUPPORT);
 
 	/* Initializing CLAP parameters */
 	for (uint32_t i = 0; i < P_COUNT; i++)
@@ -268,13 +271,13 @@ void process_event(
 {
 	if (hdr->space_id != CLAP_CORE_EVENT_SPACE_ID)
 		return;
-	
-	switch(hdr->type)
+
+	switch (hdr->type)
 	{
 	case CLAP_EVENT_NOTE_ON:
 	{
 		/* Activate the first free voice */
-		const clap_event_note_t *ev = 
+		const clap_event_note_t *ev =
 			(const clap_event_note_t *)hdr;
 		voice_on(&p->synth, ev->key, (int)(ev->velocity * 127.0f));
 		break;
@@ -282,7 +285,7 @@ void process_event(
 	case CLAP_EVENT_NOTE_OFF:
 	{
 		/* Deactivate the given pressed voice */
-		const clap_event_note_t *ev = 
+		const clap_event_note_t *ev =
 			(const clap_event_note_t *)hdr;
 		voice_off(&p->synth, ev->key);
 		break;
@@ -291,7 +294,7 @@ void process_event(
 	{
 		const clap_event_midi_t *ev =
 			(const clap_event_midi_t *)hdr;
-		
+
 		/* Getting the MIDI information from the header */
 		uint8_t status = ev->data[0] & PRESSED;
 		uint8_t key = ev->data[1];
@@ -309,7 +312,7 @@ void process_event(
 	{
 		const clap_event_param_value_t *ev =
 			(const clap_event_param_value_t *)hdr;
-	
+
 		/* Getting the parameters, event ID and value */
 		if (ev->param_id < P_COUNT)
 		{
@@ -341,7 +344,7 @@ static void apply_gestures_events(synth_plugin_t *p, const clap_output_events_t 
 			ev.param_id = i;
 			out->try_push(out, &ev.header);
 		}
-		
+
 		/* Sending gestures end events */
 		if (atomic_exchange(&p->gestures_end[i], false))
 		{
@@ -357,14 +360,14 @@ static void apply_gestures_events(synth_plugin_t *p, const clap_output_events_t 
 	}
 }
 
-/* Main audio thread function, process the synthesizer 
+/* Main audio thread function, process the synthesizer
 sound data into the CLAP host audio output */
 clap_process_status plugin_process(
 	const clap_plugin_t *plugin,
 	const clap_process_t *process)
 {
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
-	
+
 	/* Frame iteration variables */
 	const uint32_t frame_count = process->frames_count;
 	const uint32_t event_count = process->in_events->size(process->in_events);
@@ -396,9 +399,9 @@ clap_process_status plugin_process(
 		}
 
 		/* Increment the event frame */
-		next_event_frame = (event_index < event_count) 
-			? process->in_events->get(process->in_events, event_index)->time
-			: frame_count;
+		next_event_frame = (event_index < event_count)
+							   ? process->in_events->get(process->in_events, event_index)->time
+							   : frame_count;
 
 		/* Count the number of active voices */
 		int active_voices = 0;
@@ -436,7 +439,7 @@ clap_process_status plugin_process(
 }
 
 /* Initialize the plugin */
-bool plugin_init(const clap_plugin_t *plugin) 
+bool plugin_init(const clap_plugin_t *plugin)
 {
 	int res = synth_alocate(plugin);
 	if (res == 0)
@@ -446,7 +449,7 @@ bool plugin_init(const clap_plugin_t *plugin)
 }
 
 /* Destroy the plugin */
-void plugin_destroy(const clap_plugin_t *plugin) 
+void plugin_destroy(const clap_plugin_t *plugin)
 {
 	synth_free(plugin);
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
@@ -455,11 +458,12 @@ void plugin_destroy(const clap_plugin_t *plugin)
 
 /* Activate the plugin at a given sample rate */
 bool plugin_activate(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	double sample_rate,
-	uint32_t min_frames, uint32_t max_frames) 
+	uint32_t min_frames, uint32_t max_frames)
 {
-	(void)min_frames; (void)max_frames;
+	(void)min_frames;
+	(void)max_frames;
 	((synth_plugin_t *)plugin->plugin_data)->sample_rate = sample_rate;
 	return true;
 }
@@ -473,12 +477,12 @@ void plugin_deactivate(const clap_plugin_t *plugin)
 /* Start the plugin processing (does nothing) */
 bool plugin_start_processing(const clap_plugin_t *plugin)
 {
-	(void)plugin; 
+	(void)plugin;
 	return true;
 }
 
 /* Stop the plugin processing (does nothing) */
-void plugin_stop_processing(const clap_plugin_t *plugin) 
+void plugin_stop_processing(const clap_plugin_t *plugin)
 {
 	(void)plugin;
 }
@@ -513,17 +517,18 @@ void plugin_on_main_thread(const clap_plugin_t *plugin)
 
 void posix_on_fd(const clap_plugin_t *plugin, int fd, clap_posix_fd_flags_t flags)
 {
-	(void)flags; (void)fd;
+	(void)flags;
+	(void)fd;
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
 	gui_on_POSIX_fd(p);
 }
 
 static const clap_plugin_posix_fd_support_t posix_fd_support_ext =
-{
-	.on_fd = posix_on_fd,
+	{
+		.on_fd = posix_on_fd,
 };
 
-static void on_timer( const clap_plugin_t *plugin, clap_id timer_id)
+static void on_timer(const clap_plugin_t *plugin, clap_id timer_id)
 {
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
 	if (p->gui && timer_id == p->timer_id)
@@ -534,26 +539,33 @@ static void on_timer( const clap_plugin_t *plugin, clap_id timer_id)
 }
 
 static const clap_plugin_timer_support_t timer_support_ext =
-{
-	.on_timer = on_timer,
+	{
+		.on_timer = on_timer,
 };
 
 /* Get all of the plugin extensions (PARAMS, NOTE_PORTS & AUDIO_PORTS) */
 const void *plugin_get_extension(const clap_plugin_t *plugin, const char *id)
 {
-    (void)plugin;
+	(void)plugin;
 
 	extern const clap_plugin_params_t params_ext;
 	extern const clap_plugin_gui_t gui_ext;
 
-	if (!strcmp(id, CLAP_EXT_PARAMS)) return &params_ext;
-    if (!strcmp(id, CLAP_EXT_NOTE_PORTS))  return &note_ports_ext;
-    if (!strcmp(id, CLAP_EXT_AUDIO_PORTS)) return &audio_ports_ext;
-	if (!strcmp(id, CLAP_EXT_GUI)) return &gui_ext;
-	if (!strcmp(id, CLAP_EXT_POSIX_FD_SUPPORT)) return &posix_fd_support_ext;
-	if (!strcmp(id, CLAP_EXT_TIMER_SUPPORT)) return &timer_support_ext;
-	if (!strcmp(id, CLAP_EXT_STATE)) return &state_ext;
-    return NULL;
+	if (!strcmp(id, CLAP_EXT_PARAMS))
+		return &params_ext;
+	if (!strcmp(id, CLAP_EXT_NOTE_PORTS))
+		return &note_ports_ext;
+	if (!strcmp(id, CLAP_EXT_AUDIO_PORTS))
+		return &audio_ports_ext;
+	if (!strcmp(id, CLAP_EXT_GUI))
+		return &gui_ext;
+	if (!strcmp(id, CLAP_EXT_POSIX_FD_SUPPORT))
+		return &posix_fd_support_ext;
+	if (!strcmp(id, CLAP_EXT_TIMER_SUPPORT))
+		return &timer_support_ext;
+	if (!strcmp(id, CLAP_EXT_STATE))
+		return &state_ext;
+	return NULL;
 }
 
-#endif 
+#endif

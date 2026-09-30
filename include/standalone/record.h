@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 /* Wav header structure */
-typedef struct 
+typedef struct
 {
 	unsigned char chunk_id[4];
 	unsigned int chunk_size;
@@ -30,4 +30,4 @@ int init_wav_file(char *fname, FILE **fwav, wav_header_t *header);
 /* Close a wav file */
 int close_wav_file(FILE *fwav);
 
-#endif 
+#endif

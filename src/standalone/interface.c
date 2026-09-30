@@ -8,7 +8,7 @@
 #ifdef __WINDOWS__
 #include "standalone/win_defs.h"
 #include <windows.h>
-#endif 
+#endif
 
 #define __NO_RL__
 #include "defs.h"
@@ -18,7 +18,7 @@
 
 /* Render the ADSR envelope sliders */
 void render_adsr(
-	float *attack, float *decay, 
+	float *attack, float *decay,
 	float *sustain, float *release)
 {
 	/* ADSR envelope sliders */
@@ -68,7 +68,7 @@ void render_filter_adsr(
 
 /* Render the oscillators waveforms dropdown menus*/
 void render_osc_waveforms(
-	int *wave_a, int *wave_b, int *wave_c, 
+	int *wave_a, int *wave_b, int *wave_c,
 	bool *ddm_a, bool *ddm_b, bool *ddm_c)
 {
 	/* Oscillators waveforms */
@@ -81,7 +81,7 @@ void render_osc_waveforms(
 	{
 		*ddm_a = !*ddm_a;
 	}
-		
+
 	GuiLabel((Rectangle){250, 265, 110, 20}, "Oscillator B");
 	if (GuiDropdownBox((Rectangle){230, 285, 140, 40},
 					   "#01#Sine;#02#Square;#03#Triangle;#04#Sawtooth",
@@ -89,7 +89,6 @@ void render_osc_waveforms(
 	{
 		*ddm_b = !*ddm_b;
 	}
-		
 
 	GuiLabel((Rectangle){420, 265, 110, 20}, "Oscillator C");
 	if (GuiDropdownBox((Rectangle){400, 285, 140, 40},
@@ -113,7 +112,7 @@ void render_synth_params(synth_t *synth)
 	{
 		DrawRectangle(640, 260, 225 * synth->lfo_amp, 40, GRAY);
 	}
-	   
+
 	GuiLabel((Rectangle){730, 310, 100, 20}, "Cutoff");
 	GuiSlider((Rectangle){640, 330, 225, 40}, NULL, NULL,
 			  &synth->filter.cutoff, 0.025f, 1.0f); /* 2.5% to 100% to avoid muting */
@@ -124,16 +123,16 @@ void render_synth_params(synth_t *synth)
 
 	GuiLabel((Rectangle){990, 240, 100, 20}, "Detune");
 	if (GuiSlider((Rectangle){900, 260, 225, 40}, NULL, NULL,
-			  &synth->detune, 0.0f, 1.0f))
+				  &synth->detune, 0.0f, 1.0f))
 	{
 		apply_detune_change(synth);
 	}
-	   
+
 	if (synth->lfo.mod_param == LFO_DETUNE)
 	{
 		DrawRectangle(900, 260, 225 * synth->lfo_detune, 40, GRAY);
 	}
-		
+
 	GuiCheckBox((Rectangle){900, 330, 40, 40}, "Filter ADSR",
 				&synth->filter.env);
 }
@@ -145,19 +144,19 @@ void render_options(
 	bool *saving_preset, bool *loading_preset,
 	bool *saving_audio_file, bool *recording)
 {
-	 /* Options */
+	/* Options */
 	GuiGroupBox((Rectangle){1190, 230, 554, 160}, "Options");
 
 	if (GuiButton((Rectangle){1210, 240, 120, 40}, "Save preset"))
 	{
 		*saving_preset = true;
-	}   
+	}
 
 	if (GuiButton((Rectangle){1210, 290, 120, 40}, "Load preset"))
 	{
 		*loading_preset = true;
 	}
-		
+
 	int record_button = GuiButton((Rectangle){1210, 340, 120, 40}, "Record");
 
 	if (record_button && !*recording)
@@ -168,7 +167,7 @@ void render_options(
 	{
 		*recording = false;
 	}
-		
+
 	if (*saving_audio_file)
 	{
 		int res = GuiTextInputBox((Rectangle){WIDTH / 2 - 100, HEIGHT / 2 - 50, 200, 100}, "Audio file name :", "", audio_filename, 20, "Start recording", (int *)saving_audio_file, false);
@@ -184,7 +183,7 @@ void render_options(
 	{
 		DrawRectangleRounded((Rectangle){1340, 340, 5, 40}, 0.2, 10, RED);
 	}
-		
+
 	if (GuiCheckBox((Rectangle){1350, 240, 40, 40}, "Arpeggiator", &synth->arp))
 	{
 		for (int v = 0; v < VOICES; v++)
@@ -200,7 +199,7 @@ void render_options(
 
 /* Render the effects parameters */
 void render_effects(
-	synth_t *synth, 
+	synth_t *synth,
 	bool *lfo_wave_ddm, bool *lfo_params_ddm,
 	bool *distortion, bool *overdrive,
 	float *distortion_amount)
@@ -227,7 +226,7 @@ void render_effects(
 	{
 		*lfo_params_ddm = !*lfo_params_ddm;
 	}
-		
+
 	/* Distortion */
 	GuiLabel((Rectangle){1540 - 25, 50, 100, 20}, "Distortion");
 	GuiCheckBox((Rectangle){1540, 70, 40, 40}, NULL, distortion);
@@ -250,7 +249,7 @@ void render_waveform(short *buffer)
 
 	int step = 1;
 
-	/* Looping onto the frames of the buffer, 
+	/* Looping onto the frames of the buffer,
 	the i = 18 and FRAMES - 15 is because the waveform would go horizontally past the GuiGroupBox */
 	for (int i = 18; i < FRAMES - 15; i += step)
 	{
@@ -291,7 +290,6 @@ void render_white_keys()
 		DrawRectangleLines(i * WHITE_KEYS_WIDTH, HEIGHT - WHITE_KEYS_HEIGHT,
 						   WHITE_KEYS_WIDTH + 1, WHITE_KEYS_HEIGHT, BLACK);
 	}
-		
 }
 
 /* Render the black keys from the MIDI piano visualizer */
@@ -314,7 +312,7 @@ void render_black_keys()
 			if (white_key_index >= WHITE_KEYS)
 			{
 				break;
-			}   
+			}
 		}
 		if (white_key_index >= WHITE_KEYS)
 		{
@@ -323,7 +321,7 @@ void render_black_keys()
 	}
 }
 
-/* Renders given note into a pressed key in the MIDI piano visualizer 
+/* Renders given note into a pressed key in the MIDI piano visualizer
 Render the key in a different color if it's the current arpeggio key */
 void render_key(int midi_note, bool arp)
 {
@@ -331,7 +329,6 @@ void render_key(int midi_note, bool arp)
 	{
 		return;
 	}
-		
 
 	int width = 0, height = 0, x = 0, y = 0, is_black = 0;
 	get_key_position(midi_note, &x, &y, &width, &height, &is_black);
@@ -354,7 +351,7 @@ void render_key(int midi_note, bool arp)
 		{
 			DrawLine(x + width, y + 1, x + width, y + height, SKYBLUE);
 		}
-		else 
+		else
 		{
 			DrawLine(x + width, y + 1, x + width, y + height, (Color){151, 232, 255, 255});
 		}

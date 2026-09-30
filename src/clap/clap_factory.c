@@ -7,7 +7,6 @@
 #include "clap/clap_factory.h"
 #include "clap/clap_plugin.h"
 
-
 /* Plugin factory */
 const clap_plugin_t *create_plugin_instance(
 	const clap_plugin_factory_t *factory,
@@ -18,7 +17,8 @@ const clap_plugin_t *create_plugin_instance(
 	if (strcmp(plugin_id, __descriptor.id))
 		return NULL;
 	synth_plugin_t *p = (synth_plugin_t *)calloc(1, sizeof(synth_plugin_t));
-	if (!p) return NULL;
+	if (!p)
+		return NULL;
 
 	p->host = host;
 	p->plugin.desc = &__descriptor;
@@ -56,10 +56,9 @@ const clap_plugin_descriptor_t *factory_get_plugin_descriptor(
 
 /* Plugin factory structure */
 const clap_plugin_factory_t plugin_factory =
-{
-	.get_plugin_count = factory_get_plugin_count,
-	.get_plugin_descriptor = factory_get_plugin_descriptor,
-	.create_plugin = create_plugin_instance
-};
+	{
+		.get_plugin_count = factory_get_plugin_count,
+		.get_plugin_descriptor = factory_get_plugin_descriptor,
+		.create_plugin = create_plugin_instance};
 
 #endif /* __CLAP__ */

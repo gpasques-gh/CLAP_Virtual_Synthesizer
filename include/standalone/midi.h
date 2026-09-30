@@ -21,7 +21,7 @@ typedef struct
 } midi_event_t;
 
 /* MIDI queue data structure */
-typedef struct 
+typedef struct
 {
 	midi_event_t events[MIDI_QUEUE_SIZE];
 	volatile LONG head;
@@ -31,17 +31,17 @@ typedef struct
 /* Initialize a MIDI queue */
 void midi_queue_init(midi_queue_t *q);
 
-/* Poll the MIDI queue for new MIDI events 
+/* Poll the MIDI queue for new MIDI events
 and apply them to the synthesizer */
 /* This function is called from the audio thread */
 void poll_midi_queue(midi_queue_t *q, synth_t *synth);
 
 /* Callback function for the HMIDIIN */
 void CALLBACK MidiInProc(
-	HMIDIIN midi_in, 
-	UINT msg, 
-	DWORD_PTR instance, 
-	DWORD_PTR param1, 
+	HMIDIIN midi_in,
+	UINT msg,
+	DWORD_PTR instance,
+	DWORD_PTR param1,
 	DWORD_PTR param2);
 
 #elif defined(__LINUX__)

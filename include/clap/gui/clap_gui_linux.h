@@ -11,7 +11,6 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 
-
 #include "clap/gui/clap_gui.h"
 
 typedef struct synth_plugin_s synth_plugin_t;
@@ -33,6 +32,6 @@ void gui_set_parent(synth_plugin_t *plugin, const clap_window_t *window);
 void gui_set_visible(synth_plugin_t *plugin, bool visible);
 void gui_on_POSIX_fd(synth_plugin_t *plugin);
 
-#endif 
-#endif 
-#endif 
+#endif
+#endif
+#endif

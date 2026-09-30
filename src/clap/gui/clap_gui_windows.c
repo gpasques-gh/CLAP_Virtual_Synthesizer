@@ -9,19 +9,20 @@ static int global_open_gui_count = 0;
 
 void gui_paint(synth_plugin_t *plugin, bool internal)
 {
-	if (internal) plugin_paint(plugin, plugin->gui->bits);
+	if (internal)
+		plugin_paint(plugin, plugin->gui->bits);
 	RedrawWindow(plugin->gui->window, 0, 0, RDW_INVALIDATE);
 }
 
 LRESULT CALLBACK gui_window_procedure(
-	HWND window, 
-	UINT message, 
-	WPARAM wparam, 
+	HWND window,
+	UINT message,
+	WPARAM wparam,
 	LPARAM lparam)
 {
-	synth_plugin_t *plugin = 
-		(synth_plugin_t *) GetWindowLongPtr(window, 0);
-	
+	synth_plugin_t *plugin =
+		(synth_plugin_t *)GetWindowLongPtr(window, 0);
+
 	if (!plugin)
 		return DefWindowProc(window, message, wparam, lparam);
 
@@ -31,18 +32,17 @@ LRESULT CALLBACK gui_window_procedure(
 	{
 		PAINTSTRUCT paint;
 		HDC dc = BeginPaint(window, &paint);
-		BITMAPINFO info = 
-		{
-			.bmiHeader = 
+		BITMAPINFO info =
 			{
-				.biSize = sizeof(BITMAPINFOHEADER),
-				.biWidth = GUI_WIDTH,
-				.biHeight = -GUI_HEIGHT,
-				.biPlanes = 1,
-				.biBitCount = 32,
-				.biCompression = BI_RGB,
-			}
-		};
+				.bmiHeader =
+					{
+						.biSize = sizeof(BITMAPINFOHEADER),
+						.biWidth = GUI_WIDTH,
+						.biHeight = -GUI_HEIGHT,
+						.biPlanes = 1,
+						.biBitCount = 32,
+						.biCompression = BI_RGB,
+					}};
 		StretchDIBits(dc, 0, 0, GUI_WIDTH, GUI_HEIGHT, 0, 0, GUI_WIDTH, GUI_HEIGHT, plugin->gui->bits, &info, DIB_RGB_COLORS, SRCCOPY);
 		EndPaint(window, &paint);
 		break;
@@ -67,7 +67,6 @@ LRESULT CALLBACK gui_window_procedure(
 		return DefWindowProc(window, message, wparam, lparam);
 	}
 
-	
 	return 0;
 }
 
@@ -108,8 +107,7 @@ void gui_destroy(synth_plugin_t *plugin)
 		UnregisterClass(__descriptor.id, NULL);
 }
 
-
 /* Empty POSIX FD function */
 void gui_on_POSIX_fd(synth_plugin_t *plugin) { (void)plugin; }
 
-#endif 
+#endif

@@ -5,23 +5,22 @@
 #include "defs.h"
 
 const param_desc_t PARAMS[P_COUNT] =
-{
-	PARAM_VOLUME,
-	PARAM_WAVE_A,
-	PARAM_WAVE_B,
-	PARAM_WAVE_C,
-	PARAM_DETUNE,
-	PARAM_ATTACK,
-	PARAM_DECAY,
-	PARAM_SUSTAIN,
-	PARAM_RELEASE,
-	PARAM_CUTOFF,
-	PARAM_FILTER_ATTACK,
-	PARAM_FILTER_DECAY,
-	PARAM_FILTER_SUSTAIN,
-	PARAM_FILTER_RELEASE,
-	PARAM_FILTER_ENV_ON,
-};
+	{
+		PARAM_VOLUME,
+		PARAM_WAVE_A,
+		PARAM_WAVE_B,
+		PARAM_WAVE_C,
+		PARAM_DETUNE,
+		PARAM_ATTACK,
+		PARAM_DECAY,
+		PARAM_SUSTAIN,
+		PARAM_RELEASE,
+		PARAM_CUTOFF,
+		PARAM_FILTER_ATTACK,
+		PARAM_FILTER_DECAY,
+		PARAM_FILTER_SUSTAIN,
+		PARAM_FILTER_RELEASE,
+		PARAM_FILTER_ENV_ON};
 
 /* Change the oscillators waveforms from the DAW */
 static void __apply_wave_change_to_osc(synth_t *synth, int osc, int wave)
@@ -37,7 +36,7 @@ static void __apply_adsr_change(synth_t *synth, int param, float value)
 {
 	if (param < 0 || param > 4)
 		return;
-	
+
 	for (int v = 0; v < VOICES; v++)
 	{
 		switch (param)
@@ -59,17 +58,17 @@ static void __apply_adsr_change(synth_t *synth, int param, float value)
 }
 
 void apply_param_to_engine(
-	synth_plugin_t *p, 
-	clap_id id, 
+	synth_plugin_t *p,
+	clap_id id,
 	float value)
 {
-	switch(id)
+	switch (id)
 	{
-	case P_VOLUME: 
-		p->synth.amp = (float)value; 
+	case P_VOLUME:
+		p->synth.amp = (float)value;
 		break;
-	case P_DETUNE: 
-		p->synth.detune = (float)value; 
+	case P_DETUNE:
+		p->synth.detune = (float)value;
 		apply_detune_change(&p->synth);
 		break;
 	case P_WAVE_A:
@@ -122,7 +121,7 @@ void flush_gui_params(synth_plugin_t *p, const clap_output_events_t *out)
 	{
 		if (!atomic_exchange(&p->params_dirty[id], false))
 			continue;
-		
+
 		float value = atomic_load(&p->params[id]);
 		apply_param_to_engine(p, id, value);
 
@@ -207,7 +206,7 @@ static bool params_value_to_text(
 
 	if (!valid_param(id) || !out || capacity == 0)
 		return false;
-	
+
 	if (id >= P_WAVE_A && id <= P_WAVE_C)
 		snprintf(out, capacity, "%s", get_wave_name((int)value));
 	else if (id == P_ATTACK || id == P_DECAY || id == P_RELEASE)
@@ -219,7 +218,7 @@ static bool params_value_to_text(
 			snprintf(out, capacity, "%s", "Filter Env OFF");
 	else
 		snprintf(out, capacity, "%.2f", value);
-	
+
 	return true;
 }
 
@@ -236,13 +235,37 @@ static bool params_text_to_value(
 		return false;
 
 	/* Waveforms */
-	if (!strcmp(text, "Sine"))     { *out_value = SINE_WAVE; return true; }
-    if (!strcmp(text, "Square"))   { *out_value = SQUARE_WAVE; return true; }
-    if (!strcmp(text, "Triangle")) { *out_value = TRIANGLE_WAVE; return true; }
-    if (!strcmp(text, "Sawtooth")) { *out_value = SAWTOOTH_WAVE; return true; }
-	if (!strcmp(text, "Filter Env ON")) { *out_value = 1; return true; }
-	if (!strcmp(text, "Filter Env OFF")) { *out_value = 0; return true; }
-	
+	if (!strcmp(text, "Sine"))
+	{
+		*out_value = SINE_WAVE;
+		return true;
+	}
+	if (!strcmp(text, "Square"))
+	{
+		*out_value = SQUARE_WAVE;
+		return true;
+	}
+	if (!strcmp(text, "Triangle"))
+	{
+		*out_value = TRIANGLE_WAVE;
+		return true;
+	}
+	if (!strcmp(text, "Sawtooth"))
+	{
+		*out_value = SAWTOOTH_WAVE;
+		return true;
+	}
+	if (!strcmp(text, "Filter Env ON"))
+	{
+		*out_value = 1;
+		return true;
+	}
+	if (!strcmp(text, "Filter Env OFF"))
+	{
+		*out_value = 0;
+		return true;
+	}
+
 	/* Parse the value from string to double */
 	char *end = NULL;
 	double value = strtod(text, &end);
@@ -250,8 +273,10 @@ static bool params_text_to_value(
 		return false;
 
 	/* Clamping */
-	if (value < PARAMS[id].min) value = PARAMS[id].min;
-	if (value > PARAMS[id].max) value = PARAMS[id].max;
+	if (value < PARAMS[id].min)
+		value = PARAMS[id].min;
+	if (value > PARAMS[id].max)
+		value = PARAMS[id].max;
 
 	*out_value = value;
 	return true;
@@ -269,9 +294,9 @@ static void params_flush(
 	for (uint32_t i = 0; i < count; i++)
 	{
 		const clap_event_header_t *event = in->get(in, i);
-		if (event->space_id == CLAP_CORE_EVENT_SPACE_ID && 
+		if (event->space_id == CLAP_CORE_EVENT_SPACE_ID &&
 			event->type == CLAP_EVENT_PARAM_VALUE)
-				process_event(p, event);
+			process_event(p, event);
 	}
 
 	flush_gui_params(p, out);
@@ -279,13 +304,13 @@ static void params_flush(
 
 /* Parameters extension */
 const clap_plugin_params_t params_ext =
-{
-	.count = params_count,
-	.get_info = params_get_info,
-	.get_value = params_get_value,
-	.value_to_text = params_value_to_text,
-	.text_to_value = params_text_to_value,
-	.flush = params_flush,
+	{
+		.count = params_count,
+		.get_info = params_get_info,
+		.get_value = params_get_value,
+		.value_to_text = params_value_to_text,
+		.text_to_value = params_text_to_value,
+		.flush = params_flush,
 };
 
-#endif 
+#endif

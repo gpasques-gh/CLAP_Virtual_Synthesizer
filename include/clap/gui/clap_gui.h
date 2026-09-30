@@ -59,7 +59,7 @@ typedef struct
 	uint32_t param_value;
 } menu_t;
 
-typedef struct 
+typedef struct
 {
 	slider_t volume_slider;
 	slider_t adsr_sliders[4];
@@ -73,7 +73,7 @@ typedef struct
 	menu_t wave_c;
 } gui_elements_t;
 
-typedef struct 
+typedef struct
 {
 	bool mouse_dragging;
 	uint32_t mouse_drag_og_x;

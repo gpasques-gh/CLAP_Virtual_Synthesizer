@@ -9,7 +9,6 @@ short distortion(short sample, float amount, bool overdriving)
 	if (amount > 1.0)
 	{
 		amount = 1.0;
-
 	}
 	else if (amount < 0.0)
 	{
@@ -17,14 +16,14 @@ short distortion(short sample, float amount, bool overdriving)
 	}
 
 	short clip;
-	
+
 	if (overdriving)
 	{
-		clip = (32767 / 2) *  (1 - amount);
+		clip = (32767 / 2) * (1 - amount);
 	}
-	else 
+	else
 	{
-		clip = 32767 *  (1 - amount);
+		clip = 32767 * (1 - amount);
 	}
 
 	if (sample > clip)
@@ -37,6 +36,6 @@ short distortion(short sample, float amount, bool overdriving)
 	}
 
 	/* Gain to avoid silencing when amount is high */
-	sample *= 1.0 + (1.0 - clip / 32767.0);  
-	return sample;   
+	sample *= 1.0 + (1.0 - clip / 32767.0);
+	return sample;
 }

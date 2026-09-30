@@ -27,9 +27,9 @@ void gui_create(synth_plugin_t *plugin);
 void gui_destroy(synth_plugin_t *plugin);
 void gui_on_POSIX_fd(synth_plugin_t *plugin);
 
-#define gui_set_parent(plugin, parent) SetParent((plugin)->gui->window, (HWND) (parent)->win32)
+#define gui_set_parent(plugin, parent) SetParent((plugin)->gui->window, (HWND)(parent)->win32)
 #define gui_set_visible(plugin, visible) ShowWindow((plugin)->gui->window, (visible) ? SW_SHOW : SW_HIDE)
 
-#endif 
-#endif 
-#endif 
+#endif
+#endif
+#endif

@@ -21,13 +21,13 @@ static void __recording_handling(audio_thread_ctx_t *ctx, short buffer[FRAMES])
 	else if (!ctx->recording_on && ctx->recording_file)
 	{
 		/* Calculating the size of the audio data */
-		ctx->wave_header.sub2_size = 
-			FRAMES * 
-			ctx->fwrite_count * 
+		ctx->wave_header.sub2_size =
+			FRAMES *
+			ctx->fwrite_count *
 			(unsigned int)ctx->wave_header.num_channels *
 			(unsigned int)ctx->wave_header.bits_per_sample / 8;
 		/* Calculating the offset of the header data */
-		ctx->wave_header.chunk_size = 
+		ctx->wave_header.chunk_size =
 			(unsigned int)ctx->wave_header.sub2_size + 36;
 		/* Writing the new header to the WAVE file and closing it */
 		fseek(ctx->recording_file, 0, SEEK_SET);
@@ -57,7 +57,7 @@ static void __process_synthesizer(audio_thread_ctx_t *ctx, short buffer[FRAMES])
 		if (ctx->distortion_on)
 		{
 			buffer[i] = distortion(buffer[i],
-				ctx->distortion_amount, ctx->overdrive);
+								   ctx->distortion_amount, ctx->overdrive);
 		}
 		process_arpeggiator(&ctx->synth, ctx->active_voices);
 	}
@@ -75,7 +75,8 @@ void CALLBACK waveOutProc(
 	DWORD_PTR param1,
 	DWORD_PTR param2)
 {
-	(void)wave_out; (void)param2;
+	(void)wave_out;
+	(void)param2;
 	if (msg == WOM_DONE)
 	{
 		audio_thread_ctx_t *ctx = (audio_thread_ctx_t *)instance;
@@ -155,7 +156,7 @@ void *audio_thread_proc(void *param)
 	/* Thread is asynchronous to avoir ALSA I/O errors */
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	audio_thread_ctx_t *ctx = (audio_thread_ctx_t *)param;
-	 
+
 	while (!atomic_load(&ctx->should_stop))
 	{
 		/* Get MIDI events */
@@ -165,8 +166,8 @@ void *audio_thread_proc(void *param)
 		/* Process the synthesizer sound data */
 		short local_buf[FRAMES];
 		__process_synthesizer(ctx, local_buf);
-		
-		/* Enter critical section and copy 
+
+		/* Enter critical section and copy
 		the local buffer to the context buffer */
 		/* This syncs the sound data with the main for
 		waveform visualization in the GUI */
@@ -194,5 +195,5 @@ void *audio_thread_proc(void *param)
 	return 0;
 }
 
-#endif 
-#endif 
+#endif
+#endif

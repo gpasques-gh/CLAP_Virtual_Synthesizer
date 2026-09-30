@@ -40,7 +40,7 @@ typedef struct synth_plugin_s
 	clap_plugin_t plugin;
 	const clap_host_t *host;
 	double sample_rate;
-	
+
 	/* Synthesizer*/
 	synth_t synth;
 
@@ -50,7 +50,7 @@ typedef struct synth_plugin_s
 	atomic_bool gestures_start[P_COUNT], gestures_end[P_COUNT];
 	_Atomic int atomic_notes[VOICES];
 	const clap_host_params_t *host_params;
-	
+
 	/* Graphical User Interface */
 	clap_gui_t *gui;
 	mouse_t mouse;
@@ -74,9 +74,9 @@ clap_process_status plugin_process(
 bool plugin_init(const clap_plugin_t *plugin);
 void plugin_destroy(const clap_plugin_t *plugin);
 bool plugin_activate(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	double sample_rate,
-	uint32_t min_frames, 
+	uint32_t min_frames,
 	uint32_t max_frames);
 void plugin_deactivate(const clap_plugin_t *plugin);
 bool plugin_start_processing(const clap_plugin_t *plugin);

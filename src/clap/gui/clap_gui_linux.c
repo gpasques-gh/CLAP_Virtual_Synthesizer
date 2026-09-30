@@ -5,16 +5,17 @@
 #include "clap/clap_plugin.h"
 #include "clap/gui/clap_gui_linux.h"
 
-#define INPUTS (SubstructureNotifyMask | ExposureMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask | ButtonMotionMask | KeymapStateMask | FocusChangeMask | PropertyChangeMask )
+#define INPUTS (SubstructureNotifyMask | ExposureMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask | ButtonMotionMask | KeymapStateMask | FocusChangeMask | PropertyChangeMask)
 
 void gui_paint(synth_plugin_t *plugin, bool internal)
 {
-    if (internal) plugin_paint(plugin, plugin->gui->bits);
+    if (internal)
+        plugin_paint(plugin, plugin->gui->bits);
     XPutImage(
-        plugin->gui->display, 
-        plugin->gui->window, 
+        plugin->gui->display,
+        plugin->gui->window,
         DefaultGC(plugin->gui->display, 0),
-        plugin->gui->image, 
+        plugin->gui->image,
         0, 0, 0, 0,
         GUI_WIDTH, GUI_HEIGHT);
 }
@@ -67,9 +68,9 @@ void gui_create(synth_plugin_t *plugin)
     plugin->gui->display = XOpenDisplay(NULL);
     XSetWindowAttributes attributes = {0};
     plugin->gui->window = XCreateWindow(
-        plugin->gui->display, 
+        plugin->gui->display,
         DefaultRootWindow(plugin->gui->display),
-        0, 0, GUI_WIDTH, GUI_HEIGHT, 0, 0, 
+        0, 0, GUI_WIDTH, GUI_HEIGHT, 0, 0,
         InputOutput, CopyFromParent, CWOverrideRedirect, &attributes);
     XStoreName(plugin->gui->display, plugin->gui->window, __descriptor.name);
 
@@ -77,11 +78,11 @@ void gui_create(synth_plugin_t *plugin)
     Atom embed_info_atom = XInternAtom(plugin->gui->display, "_XEMBED_INFO", 0);
     uint32_t embed_info_data[2] = {0 /* version */, 0 /* not mapped */};
     XChangeProperty(
-        plugin->gui->display, plugin->gui->window, 
-        embed_info_atom, embed_info_atom, 
-        32, PropModeReplace, 
-        (uint8_t *) embed_info_data, 2);
-    
+        plugin->gui->display, plugin->gui->window,
+        embed_info_atom, embed_info_atom,
+        32, PropModeReplace,
+        (uint8_t *)embed_info_data, 2);
+
     /* Set the size of the window */
     XSizeHints *size_hints = XAllocSizeHints();
     size_hints->flags = PMinSize | PMaxSize;
@@ -95,22 +96,22 @@ void gui_create(synth_plugin_t *plugin)
 
     /* Create the bitmap */
     plugin->gui->image = XCreateImage(
-        plugin->gui->display, 
-        DefaultVisual(plugin->gui->display, 0), 
+        plugin->gui->display,
+        DefaultVisual(plugin->gui->display, 0),
         24, ZPixmap, 0, NULL,
         10, 10, 32, 0);
     plugin->gui->bits = (uint32_t *)calloc(1, GUI_WIDTH * GUI_HEIGHT * 4);
     plugin->gui->image->width = GUI_WIDTH;
     plugin->gui->image->height = GUI_HEIGHT;
     plugin->gui->image->bytes_per_line = GUI_WIDTH * 4;
-    plugin->gui->image->data = (char *) plugin->gui->bits;
+    plugin->gui->image->data = (char *)plugin->gui->bits;
 
     /* Register the file descripter we'll receive events from */
     if (plugin->host_POSIX_support && plugin->host_POSIX_support->register_fd)
     {
         plugin->host_POSIX_support->register_fd(
             plugin->host,
-            ConnectionNumber(plugin->gui->display), 
+            ConnectionNumber(plugin->gui->display),
             CLAP_POSIX_FD_READ);
     }
 }
@@ -140,8 +141,10 @@ void gui_set_parent(synth_plugin_t *plugin, const clap_window_t *window)
 
 void gui_set_visible(synth_plugin_t *plugin, bool visible)
 {
-    if (visible) XMapRaised(plugin->gui->display, plugin->gui->window);
-    else XUnmapWindow(plugin->gui->display, plugin->gui->window);
+    if (visible)
+        XMapRaised(plugin->gui->display, plugin->gui->window);
+    else
+        XUnmapWindow(plugin->gui->display, plugin->gui->window);
     XFlush(plugin->gui->display);
 }
 
@@ -161,7 +164,6 @@ void gui_on_POSIX_fd(synth_plugin_t *plugin)
 
             if (event.type == MotionNotify && event0.type == MotionNotify)
             {
-
             }
             else
             {

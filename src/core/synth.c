@@ -1,8 +1,8 @@
 
 #ifdef __LINUX__
-	#define _GNU_SOURCE
+#define _GNU_SOURCE
 #else
-	#define M_PI 3.14159265359
+#define M_PI 3.14159265359
 #endif
 
 #include <math.h>
@@ -78,7 +78,8 @@ float adsr_process(adsr_t *adsr)
 		if (adsr->release > 0.0f)
 		{
 			/* Release acts as a time constant */
-			adsr->output -= adsr->output / (adsr->release * RATE);;
+			adsr->output -= adsr->output / (adsr->release * RATE);
+			;
 			if (adsr->output <= 0.001f)
 			{
 				adsr->output = 0.0f;
@@ -97,11 +98,10 @@ float adsr_process(adsr_t *adsr)
 		adsr->state = ENV_IDLE;
 		break;
 	}
-	
+
 	/* Return the amplification of the ADSR envelope */
 	return adsr->output;
 }
-
 
 /* Process the synth voices into the sound buffer */
 double process_voices(synth_t *synth)
@@ -172,7 +172,7 @@ double process_voices(synth_t *synth)
 			mixed_voices += mixed_osc;
 		}
 	}
-	
+
 	return mixed_voices;
 }
 
@@ -184,7 +184,7 @@ void process_lfo(synth_t *synth)
 		/* Processing the LFO */
 		double phase_inc = synth->lfo.osc.freq / RATE;
 		double automation;
-		
+
 		/* Calculating the wave from the LFO */
 		switch (synth->lfo.osc.wave)
 		{
@@ -238,8 +238,8 @@ double process_gain(synth_t *synth, double sample, int active_voices)
 	{
 		return sample;
 	}
-	
-	 /* Gain to stay at the same level despite the number of active voices */
+
+	/* Gain to stay at the same level despite the number of active voices */
 	double gain = (active_voices > 0)
 					  ? 1.0 / sqrt((double)active_voices)
 					  : 0.0;
@@ -261,11 +261,11 @@ double process_gain(synth_t *synth, double sample, int active_voices)
 double process_filter(synth_t *synth, double sample)
 {
 	double cutoff = synth->filter.cutoff;
- 
+
 	if (synth->filter.env && synth->lfo.mod_param != LFO_CUTOFF)
 	{
 		cutoff = synth->filter.cutoff +
-						adsr_process(&synth->filter.adsr) / 2;
+				 adsr_process(&synth->filter.adsr) / 2;
 		if (cutoff > 1.0)
 		{
 			cutoff = 1.0;
@@ -313,7 +313,7 @@ void process_arpeggiator(synth_t *synth, int active_voices)
 				synth->active_arp = 0;
 			}
 			synth->active_arp_float = 0.0;
-			
+
 			/* Reseting ADSR envelope */
 			if (synth->voices[synth->active_arp].pressed)
 			{
@@ -359,17 +359,17 @@ void apply_detune_change(synth_t *synth)
 	{
 		detune = synth->lfo_detune;
 	}
-	else 
+	else
 	{
 		detune = synth->detune;
 	}
-	
+
 	for (int v = 0; v < VOICES; v++)
 	{
 		int a4_diff = synth->voices[v].note - A4_POSITION;
-		synth->voices[v].oscillators[1].freq = 
+		synth->voices[v].oscillators[1].freq =
 			A_4 * pow(2, a4_diff / 12.0) + (5 * detune);
-		synth->voices[v].oscillators[2].freq = 
+		synth->voices[v].oscillators[2].freq =
 			A_4 * pow(2, a4_diff / 12.0) - (5 * detune);
 	}
 }
@@ -420,7 +420,7 @@ void sort_synth_voices(synth_t *synth)
 	{
 		voice_t current = synth->voices[v];
 		int i = v - 1;
-		
+
 		while (i >= 0 && synth->voices[i].note > current.note)
 		{
 			synth->voices[i + 1] = synth->voices[i];
@@ -435,7 +435,7 @@ void sort_synth_voices(synth_t *synth)
 	{
 		voice_t current = synth->voices[v];
 		int i = v - 1;
-		
+
 		while (i >= 0 && synth->voices[i].note == -1)
 		{
 			synth->voices[i + 1] = synth->voices[i];
@@ -451,7 +451,7 @@ void voice_on(synth_t *synth, int key, int vel)
 	/* Count the currently pressed voices */
 	int pressed_voices = 0;
 	for (int v = 0; v < VOICES; v++)
-	{   
+	{
 		if (synth->voices[v].pressed)
 			pressed_voices++;
 		if (synth->voices[v].adsr.state == ENV_RELEASE && !synth->arp)
@@ -460,13 +460,14 @@ void voice_on(synth_t *synth, int key, int vel)
 
 	/* Get the first free voice */
 	voice_t *free_voice = get_free_voice(synth);
-	if (free_voice == NULL) return;
+	if (free_voice == NULL)
+		return;
 
 	/* Press the voice and activate it */
 	free_voice->pressed = 1;
 	change_freq(free_voice, key, vel, synth->detune);
 	if (pressed_voices == 0 && synth->filter.env)
-			synth->filter.adsr.state = ENV_ATTACK;
+		synth->filter.adsr.state = ENV_ATTACK;
 
 	/* If the arpeggiator is on */
 	if (synth->arp)
@@ -485,12 +486,12 @@ void voice_off(synth_t *synth, int key)
 	for (int v = 0; v < VOICES; v++)
 		if (synth->voices[v].pressed)
 			pressed_voices++;
-	
-	/* Loop through the voices to deactivate 
+
+	/* Loop through the voices to deactivate
 	the one of which MIDI note has been released */
 	for (int v = 0; v < VOICES; v++)
 	{
-		if (synth->voices[v].note == key && 
+		if (synth->voices[v].note == key &&
 			synth->voices[v].pressed)
 		{
 			if (synth->arp && synth->voices[v].adsr.state != ENV_IDLE)
@@ -498,16 +499,16 @@ void voice_off(synth_t *synth, int key)
 				synth->voices[v].adsr.state = ENV_IDLE;
 			}
 			else if (!synth->arp &&
-					synth->voices[v].adsr.state != ENV_RELEASE &&
-					synth->voices[v].adsr.state != ENV_IDLE)
+					 synth->voices[v].adsr.state != ENV_RELEASE &&
+					 synth->voices[v].adsr.state != ENV_IDLE)
 			{
 				synth->voices[v].adsr.state = ENV_RELEASE;
 			}
-				
+
 			synth->voices[v].note = -1;
 			synth->voices[v].pressed = 0;
 
-			break; 
+			break;
 		}
 	}
 
@@ -560,7 +561,7 @@ void update_synth_envelope(
 }
 
 void update_synth_oscillators(
-	synth_t *synth, 
+	synth_t *synth,
 	int w_a, int w_b, int w_c)
 {
 	for (int v = 0; v < VOICES; v++)

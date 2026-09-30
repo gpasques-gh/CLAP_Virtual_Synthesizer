@@ -1,7 +1,7 @@
 #ifdef __CLAP__
 
 #include <string.h>
-#include <float.h> 
+#include <float.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -23,7 +23,7 @@
 #include "defs.h"
 
 /* Font structure */
-typedef struct 
+typedef struct
 {
 	uint8_t *ttf_buffer;
 	stbtt_fontinfo info;
@@ -52,16 +52,16 @@ static void gui_font_free(void)
 
 /* Basic RGB blending function */
 static void blend_pixel(
-	uint32_t *bits, 
+	uint32_t *bits,
 	int x, int y,
 	uint32_t color, uint8_t alpha)
 {
-	if (x < 0 || y  < 0 || x >= GUI_WIDTH || y >= GUI_HEIGHT || alpha == 0)
+	if (x < 0 || y < 0 || x >= GUI_WIDTH || y >= GUI_HEIGHT || alpha == 0)
 		return;
 
 	/* Get source and destination RGBs */
 	uint32_t *dst = &bits[y * GUI_WIDTH + x];
-	uint8_t sr = (uint8_t )(color >> 16);
+	uint8_t sr = (uint8_t)(color >> 16);
 	uint8_t sg = (uint8_t)(color >> 8);
 	uint8_t sb = (uint8_t)(color);
 	uint8_t dr = (uint8_t)(*dst >> 16);
@@ -95,8 +95,7 @@ static uint32_t get_text_width(const char *text, float px_size)
 			&__font.info,
 			*p,
 			&advance_width,
-			&left_side_bearing
-		);
+			&left_side_bearing);
 
 		width += (int)(advance_width * scale);
 	}
@@ -106,16 +105,16 @@ static uint32_t get_text_width(const char *text, float px_size)
 
 /* Paint text to the bitmap using STB TrueType library */
 static void plugin_paint_text(
-	uint32_t *bits, 
-	int x, int y, 
-	const char *text, 
-	float px_size, 
+	uint32_t *bits,
+	int x, int y,
+	const char *text,
+	float px_size,
 	uint32_t color)
 {
 	if (!__font.loaded)
 		return;
 
-	float scale = 
+	float scale =
 		stbtt_ScaleForPixelHeight(&__font.info, px_size);
 	int ascent;
 	stbtt_GetFontVMetrics(&__font.info, &ascent, NULL, NULL);
@@ -129,7 +128,7 @@ static void plugin_paint_text(
 		int w, h, xoff, yoff;
 		unsigned char *bitmap = stbtt_GetCodepointBitmap(
 			&__font.info, 0, scale, *p, &w, &h, &xoff, &yoff);
-		
+
 		if (bitmap)
 		{
 			/* Draw pixels on the GUI bitmap */
@@ -141,7 +140,7 @@ static void plugin_paint_text(
 					uint8_t alpha = bitmap[j * w + i];
 					blend_pixel(
 						bits,
-						(int)xpos + xoff +i,
+						(int)xpos + xoff + i,
 						y + baseline + yoff + j,
 						color, alpha);
 				}
@@ -156,8 +155,8 @@ static void plugin_paint_text(
 		stbtt_GetCodepointHMetrics(&__font.info, *p, &advance, NULL);
 		xpos += advance * scale;
 		if (p[1])
-			xpos += scale * 
-				stbtt_GetCodepointKernAdvance(&__font.info, p[0], p[1]);
+			xpos += scale *
+					stbtt_GetCodepointKernAdvance(&__font.info, p[0], p[1]);
 	}
 }
 
@@ -168,13 +167,12 @@ static void plugin_paint_rec(uint32_t *bits, rectangle_t rec)
 	{
 		for (uint32_t x = rec.left; x < rec.right; x++)
 		{
-			bits[y * GUI_WIDTH + x] =  (
-				y <= rec.top + rec.border_width - 1 || 
-				y >= rec.bottom - rec.border_width || 
-				x <= rec.left + rec.border_width - 1 ||
-				x >= rec.right - rec.border_width)
-					? rec.border_color
-					: rec.fill_color;
+			bits[y * GUI_WIDTH + x] = (y <= rec.top + rec.border_width - 1 ||
+									   y >= rec.bottom - rec.border_width ||
+									   x <= rec.left + rec.border_width - 1 ||
+									   x >= rec.right - rec.border_width)
+										  ? rec.border_color
+										  : rec.fill_color;
 		}
 	}
 }
@@ -186,16 +184,15 @@ static void render_white_keys(uint32_t *bits)
 {
 	for (int i = 0; i < WHITE_KEYS; i++)
 	{
-		rectangle_t key = 
-		{
-			.left = (GUI_WIDTH / WHITE_KEYS) * i,
-			.right = (GUI_WIDTH / WHITE_KEYS) * i + (GUI_WIDTH / WHITE_KEYS),
-			.top = GUI_HEIGHT - GUI_HEIGHT / 6,
-			.bottom = GUI_HEIGHT,
-			.border_color = BLACK,
-			.fill_color = WHITE,
-			.border_width = 1
-		};
+		rectangle_t key =
+			{
+				.left = (GUI_WIDTH / WHITE_KEYS) * i,
+				.right = (GUI_WIDTH / WHITE_KEYS) * i + (GUI_WIDTH / WHITE_KEYS),
+				.top = GUI_HEIGHT - GUI_HEIGHT / 6,
+				.bottom = GUI_HEIGHT,
+				.border_color = BLACK,
+				.fill_color = WHITE,
+				.border_width = 1};
 		plugin_paint_rec(bits, key);
 	}
 }
@@ -203,7 +200,7 @@ static void render_white_keys(uint32_t *bits)
 /* Render the black keys onto the bitmap */
 static void render_black_keys(uint32_t *bits)
 {
-	int black_keys_pattern[] = 
+	int black_keys_pattern[] =
 		{1, 1, 0, 1, 1, 1, 0, 0};
 	int white_key_idx = 0;
 
@@ -213,21 +210,19 @@ static void render_black_keys(uint32_t *bits)
 		{
 			if (black_keys_pattern[i])
 			{
-				int x = ((white_key_idx + 1) * 
-					(GUI_WIDTH / WHITE_KEYS) - 
-					(GUI_WIDTH / WHITE_KEYS / 4));
-				rectangle_t key = 
-				{
-					.left = x,
-					.right = x + (GUI_WIDTH / WHITE_KEYS / 2),
-					.top = (GUI_HEIGHT - GUI_HEIGHT / 6),
-					.bottom = ((GUI_HEIGHT - GUI_HEIGHT / 6) + GUI_HEIGHT / 10),
-					.border_color = BLACK,
-					.fill_color = BLACK,
-					.border_width = 1
-				};
+				int x = ((white_key_idx + 1) *
+							 (GUI_WIDTH / WHITE_KEYS) -
+						 (GUI_WIDTH / WHITE_KEYS / 4));
+				rectangle_t key =
+					{
+						.left = x,
+						.right = x + (GUI_WIDTH / WHITE_KEYS / 2),
+						.top = (GUI_HEIGHT - GUI_HEIGHT / 6),
+						.bottom = ((GUI_HEIGHT - GUI_HEIGHT / 6) + GUI_HEIGHT / 10),
+						.border_color = BLACK,
+						.fill_color = BLACK,
+						.border_width = 1};
 				plugin_paint_rec(bits, key);
-				
 			}
 
 			white_key_idx++;
@@ -294,9 +289,9 @@ static void draw_piano_keyboard(synth_plugin_t *plugin)
 	{
 		int note = atomic_load(&plugin->atomic_notes[v]);
 		if (note != -1 && !is_black_key(note))
-		render_key(plugin->gui->bits, note);
+			render_key(plugin->gui->bits, note);
 	}
-	
+
 	render_black_keys(plugin->gui->bits);
 	for (int v = 0; v < VOICES; v++)
 	{
@@ -308,15 +303,15 @@ static void draw_piano_keyboard(synth_plugin_t *plugin)
 
 /* Send which param corresponds to a XY pos on the GUI */
 static uint32_t get_param_gui(
-	gui_elements_t elements, 
+	gui_elements_t elements,
 	uint32_t x, uint32_t y)
 {
 	/* SLIDERS */
 
 	/* Amplification */
-	rectangle_t amp = 
+	rectangle_t amp =
 		elements.volume_slider.rec_value;
-	
+
 	/* ADSR */
 	rectangle_t attack =
 		elements.adsr_sliders[0].rec_value;
@@ -338,7 +333,7 @@ static uint32_t get_param_gui(
 		elements.filter_adsr_sliders[3].rec_value;
 
 	/* Filter cutoff */
-	rectangle_t cutoff = 
+	rectangle_t cutoff =
 		elements.cutoff_slider.rec_value;
 
 	/* Filter envelope on checkbox */
@@ -351,37 +346,37 @@ static uint32_t get_param_gui(
 	/* Return the parameter ID from XY position */
 	if (elements.wave_a.entries_on)
 	{
-		if (IN_REC(x, y, elements.wave_a.entries[0].rec) || 
-			IN_REC(x, y, elements.wave_a.entries[1].rec) || 
-			IN_REC(x, y, elements.wave_a.entries[2].rec) || 
+		if (IN_REC(x, y, elements.wave_a.entries[0].rec) ||
+			IN_REC(x, y, elements.wave_a.entries[1].rec) ||
+			IN_REC(x, y, elements.wave_a.entries[2].rec) ||
 			IN_REC(x, y, elements.wave_a.entries[3].rec))
-				return P_WAVE_A;
+			return P_WAVE_A;
 	}
 	if (IN_REC(x, y, elements.wave_a.base_rec))
 	{
 		return P_WAVE_A;
 	}
-	
+
 	if (elements.wave_b.entries_on)
 	{
-		if (IN_REC(x, y, elements.wave_b.entries[0].rec) || 
-			IN_REC(x, y, elements.wave_b.entries[1].rec) || 
-			IN_REC(x, y, elements.wave_b.entries[2].rec) || 
+		if (IN_REC(x, y, elements.wave_b.entries[0].rec) ||
+			IN_REC(x, y, elements.wave_b.entries[1].rec) ||
+			IN_REC(x, y, elements.wave_b.entries[2].rec) ||
 			IN_REC(x, y, elements.wave_b.entries[3].rec))
-				return P_WAVE_B;
+			return P_WAVE_B;
 	}
 	if (IN_REC(x, y, elements.wave_b.base_rec))
 	{
 		return P_WAVE_B;
 	}
-	
+
 	if (elements.wave_c.entries_on)
 	{
-		if (IN_REC(x, y, elements.wave_c.entries[0].rec) || 
-			IN_REC(x, y, elements.wave_c.entries[1].rec) || 
-			IN_REC(x, y, elements.wave_c.entries[2].rec) || 
+		if (IN_REC(x, y, elements.wave_c.entries[0].rec) ||
+			IN_REC(x, y, elements.wave_c.entries[1].rec) ||
+			IN_REC(x, y, elements.wave_c.entries[2].rec) ||
 			IN_REC(x, y, elements.wave_c.entries[3].rec))
-				return P_WAVE_C;
+			return P_WAVE_C;
 	}
 	if (IN_REC(x, y, elements.wave_c.base_rec))
 	{
@@ -423,30 +418,28 @@ static void paint_checkbox(uint32_t *bits, checkbox_t box)
 	plugin_paint_rec(bits, box.rec);
 	if (box.param_value)
 	{
-		rectangle_t inner_rec = 
-		{
-			.left = box.rec.left + 5,
-			.right = box.rec.right - 5,
-			.top = box.rec.top + 5,
-			.bottom = box.rec.bottom - 5,
-			.fill_color = WHITE,
-			.border_color = WHITE
-		};
+		rectangle_t inner_rec =
+			{
+				.left = box.rec.left + 5,
+				.right = box.rec.right - 5,
+				.top = box.rec.top + 5,
+				.bottom = box.rec.bottom - 5,
+				.fill_color = WHITE,
+				.border_color = WHITE};
 
 		plugin_paint_rec(bits, inner_rec);
 		uint32_t txt_w = get_text_width("Filter env ON", 10);
-		int txt_x =  box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
-		int txt_y =  box.rec.top - 10;
+		int txt_x = box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
+		int txt_y = box.rec.top - 10;
 		plugin_paint_text(bits, txt_x, txt_y, "Filter env ON", 10, BLACK);
 	}
 	else
 	{
 		uint32_t txt_w = get_text_width("Filter env OFF", 10);
-		int txt_x =  box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
-		int txt_y =  box.rec.top - 10;
+		int txt_x = box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
+		int txt_y = box.rec.top - 10;
 		plugin_paint_text(bits, txt_x, txt_y, "Filter env OFF", 10, BLACK);
 	}
-
 }
 
 /* Get slider rectangle from parameter ID */
@@ -454,18 +447,30 @@ static rectangle_t get_slider_rec(gui_elements_t elements, uint32_t param_id)
 {
 	switch (param_id)
 	{
-	case P_VOLUME: return elements.volume_slider.rec;
-	case P_ATTACK: return elements.adsr_sliders[0].rec;
-	case P_DECAY: return elements.adsr_sliders[1].rec;
-	case P_SUSTAIN: return elements.adsr_sliders[2].rec;
-	case P_RELEASE: return elements.adsr_sliders[3].rec;
-	case P_FILTER_ATTACK: return elements.filter_adsr_sliders[0].rec;
-	case P_FILTER_DECAY: return elements.filter_adsr_sliders[1].rec;
-	case P_FILTER_SUSTAIN: return elements.filter_adsr_sliders[2].rec;
-	case P_FILTER_RELEASE: return elements.filter_adsr_sliders[3].rec;
-	case P_CUTOFF: return elements.cutoff_slider.rec;
-	case P_DETUNE: return elements.detune_slider.rec;
-	default: return (rectangle_t){0};
+	case P_VOLUME:
+		return elements.volume_slider.rec;
+	case P_ATTACK:
+		return elements.adsr_sliders[0].rec;
+	case P_DECAY:
+		return elements.adsr_sliders[1].rec;
+	case P_SUSTAIN:
+		return elements.adsr_sliders[2].rec;
+	case P_RELEASE:
+		return elements.adsr_sliders[3].rec;
+	case P_FILTER_ATTACK:
+		return elements.filter_adsr_sliders[0].rec;
+	case P_FILTER_DECAY:
+		return elements.filter_adsr_sliders[1].rec;
+	case P_FILTER_SUSTAIN:
+		return elements.filter_adsr_sliders[2].rec;
+	case P_FILTER_RELEASE:
+		return elements.filter_adsr_sliders[3].rec;
+	case P_CUTOFF:
+		return elements.cutoff_slider.rec;
+	case P_DETUNE:
+		return elements.detune_slider.rec;
+	default:
+		return (rectangle_t){0};
 	}
 }
 
@@ -477,30 +482,32 @@ static rectangle_t compute_horizontal_slider_rec(
 	float value, float max)
 {
 	value = value / max;
-	if (value < 0.0f) value = 0.0f;
-	if (value > 1.0f) value = 1.0f;
+	if (value < 0.0f)
+		value = 0.0f;
+	if (value > 1.0f)
+		value = 1.0f;
 
 	uint32_t travel = (main_rec.right - main_rec.left) - width;
-	return (rectangle_t)
-	{
+	return (rectangle_t){
 		.top = main_rec.top,
 		.bottom = main_rec.bottom,
 		.left = main_rec.left + (uint32_t)(travel * value),
 		.right = main_rec.left + width + (uint32_t)(travel * value),
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1
-	};
+		.border_color = BLACK,
+		.fill_color = GRAY,
+		.border_width = 1};
 }
 
 /* Paint a slider and it's text name to the GUI bitmap */
 static void plugin_paint_slider_name(
-	uint32_t *bits, 
-	slider_t slider, 
-	const char *name, 
+	uint32_t *bits,
+	slider_t slider,
+	const char *name,
 	int txt_px_size)
 {
 	uint32_t txt_w = get_text_width(name, txt_px_size);
-	int txt_x =  slider.rec.left + (slider.rec.right - slider.rec.left) / 2 - txt_w / 2;
-	int txt_y =  slider.rec.top - txt_px_size;
+	int txt_x = slider.rec.left + (slider.rec.right - slider.rec.left) / 2 - txt_w / 2;
+	int txt_y = slider.rec.top - txt_px_size;
 	plugin_paint_text(bits, txt_x, txt_y, name, txt_px_size, BLACK);
 	plugin_paint_rec(bits, slider.rec);
 	plugin_paint_rec(bits, slider.rec_value);
@@ -508,19 +515,16 @@ static void plugin_paint_slider_name(
 
 static void create_waveform_menu(
 	synth_plugin_t *p,
-	menu_t *menu, 
-	int l, int r, 
-	int t, int b, 
-	uint32_t bc, 
+	menu_t *menu,
+	int l, int r,
+	int t, int b,
+	uint32_t bc,
 	uint32_t fc,
 	uint32_t param_id)
 {
 	/* Waveform drop down menu */
 	rectangle_t waveform_base_rec = {
-		.left = l, .right = r, 
-		.top = t, .bottom = b, 
-		.border_color = bc, .fill_color = fc,
-		.border_width = 1};
+		.left = l, .right = r, .top = t, .bottom = b, .border_color = bc, .fill_color = fc, .border_width = 1};
 
 	menu->base_rec = waveform_base_rec;
 	menu->entries_on = false;
@@ -535,7 +539,7 @@ static void create_waveform_menu(
 	menu->entries[SQUARE_WAVE].rec = waveform_base_rec;
 	menu->entries[SQUARE_WAVE].rec.top += 30;
 	menu->entries[SQUARE_WAVE].rec.bottom += 30;
-	
+
 	menu->entries[TRIANGLE_WAVE].val = TRIANGLE_WAVE;
 	menu->entries[TRIANGLE_WAVE].name = "Triangle";
 	menu->entries[TRIANGLE_WAVE].rec = waveform_base_rec;
@@ -570,109 +574,96 @@ void gui_create_elements(synth_plugin_t *plugin)
 	bool f_env_on = atomic_load(&plugin->params[P_FILTER_ENV_ON]);
 
 	/* Attack slider */
-	rectangle_t attack_rec = { 
-		.left = 24, .right = 153, .top = 24, .bottom = 59, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t attack_rec = {
+		.left = 24, .right = 153, .top = 24, .bottom = 59, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[0].rec = attack_rec;
-	plugin->gui->elements.adsr_sliders[0].rec_value = 
+	plugin->gui->elements.adsr_sliders[0].rec_value =
 		compute_horizontal_slider_rec(attack_rec, 20, attack, 2.0f);
 	plugin->gui->elements.adsr_sliders[0].param_value = attack;
 
 	/* Decay slider */
-	rectangle_t decay_rec = { 
-		.left = 24, .right = 153, .top = 71, .bottom = 106, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t decay_rec = {
+		.left = 24, .right = 153, .top = 71, .bottom = 106, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[1].rec = decay_rec;
-	plugin->gui->elements.adsr_sliders[1].rec_value = 
+	plugin->gui->elements.adsr_sliders[1].rec_value =
 		compute_horizontal_slider_rec(decay_rec, 20, decay, 2.0f);
 	plugin->gui->elements.adsr_sliders[1].param_value = decay;
 
 	/* Sustain slider */
-	rectangle_t sustain_rec = { 
-		.left = 165, .right = 294, .top = 24, .bottom = 59, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t sustain_rec = {
+		.left = 165, .right = 294, .top = 24, .bottom = 59, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[2].rec = sustain_rec;
-	plugin->gui->elements.adsr_sliders[2].rec_value = 
+	plugin->gui->elements.adsr_sliders[2].rec_value =
 		compute_horizontal_slider_rec(sustain_rec, 20, sustain, 1.0f);
 	plugin->gui->elements.adsr_sliders[2].param_value = sustain;
 
 	/* Release slider */
-	rectangle_t release_rec = { 
-		.left = 165, .right = 294, .top = 71, .bottom = 106, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t release_rec = {
+		.left = 165, .right = 294, .top = 71, .bottom = 106, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[3].rec = release_rec;
-	plugin->gui->elements.adsr_sliders[3].rec_value = 
+	plugin->gui->elements.adsr_sliders[3].rec_value =
 		compute_horizontal_slider_rec(release_rec, 20, release, 2.0f);
 	plugin->gui->elements.adsr_sliders[3].param_value = release;
 
 	/* Filter Attack slider */
-	rectangle_t f_attack_rec = { 
-		.left = 330, .right = 459, .top = 24, .bottom = 59, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t f_attack_rec = {
+		.left = 330, .right = 459, .top = 24, .bottom = 59, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[0].rec = f_attack_rec;
-	plugin->gui->elements.filter_adsr_sliders[0].rec_value = 
+	plugin->gui->elements.filter_adsr_sliders[0].rec_value =
 		compute_horizontal_slider_rec(f_attack_rec, 20, f_attack, 2.0f);
 	plugin->gui->elements.filter_adsr_sliders[0].param_value = f_attack;
 
 	/* Filter Decay slider */
-	rectangle_t f_decay_rec = { 
-		.left = 330, .right = 459, .top = 71, .bottom = 106, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t f_decay_rec = {
+		.left = 330, .right = 459, .top = 71, .bottom = 106, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[1].rec = f_decay_rec;
-	plugin->gui->elements.filter_adsr_sliders[1].rec_value = 
+	plugin->gui->elements.filter_adsr_sliders[1].rec_value =
 		compute_horizontal_slider_rec(f_decay_rec, 20, f_decay, 2.0f);
 	plugin->gui->elements.filter_adsr_sliders[1].param_value = f_decay;
 
 	/* Filter Sustain slider */
-	rectangle_t f_sustain_rec = { 
-		.left = 471, .right = 600, .top = 24, .bottom = 59, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t f_sustain_rec = {
+		.left = 471, .right = 600, .top = 24, .bottom = 59, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[2].rec = f_sustain_rec;
-	plugin->gui->elements.filter_adsr_sliders[2].rec_value = 
+	plugin->gui->elements.filter_adsr_sliders[2].rec_value =
 		compute_horizontal_slider_rec(f_sustain_rec, 20, f_sustain, 1.0f);
 	plugin->gui->elements.filter_adsr_sliders[2].param_value = f_sustain;
 
 	/* Filter Release slider */
-	rectangle_t f_release_rec = { 
-		.left = 471, .right = 600, .top = 71, .bottom = 106, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t f_release_rec = {
+		.left = 471, .right = 600, .top = 71, .bottom = 106, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[3].rec = f_release_rec;
-	plugin->gui->elements.filter_adsr_sliders[3].rec_value = 
+	plugin->gui->elements.filter_adsr_sliders[3].rec_value =
 		compute_horizontal_slider_rec(f_release_rec, 20, f_release, 2.0f);
 	plugin->gui->elements.filter_adsr_sliders[3].param_value = f_release;
 
 	/* Amplification slider */
-	rectangle_t amp_rec = { 
-		.left = 330, .right = 459, .top = 142, .bottom = 178, 
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t amp_rec = {
+		.left = 330, .right = 459, .top = 142, .bottom = 178, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.volume_slider.rec = amp_rec;
-	plugin->gui->elements.volume_slider.rec_value = 
+	plugin->gui->elements.volume_slider.rec_value =
 		compute_horizontal_slider_rec(amp_rec, 20, amp, 1.0f);
 	plugin->gui->elements.volume_slider.param_value = amp;
 
-	rectangle_t detune_rec = { 
-		.left = 330, .right = 459, .top = 190, .bottom = 226,
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t detune_rec = {
+		.left = 330, .right = 459, .top = 190, .bottom = 226, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.detune_slider.rec = detune_rec;
-	plugin->gui->elements.detune_slider.rec_value = 
+	plugin->gui->elements.detune_slider.rec_value =
 		compute_horizontal_slider_rec(detune_rec, 20, detune, 5.0f);
 	plugin->gui->elements.detune_slider.param_value = detune;
 
 	/* Cutoff slider */
-	rectangle_t cutoff_rec = { 
-		.left = 471, .right = 600, .top = 142, .bottom = 178,
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t cutoff_rec = {
+		.left = 471, .right = 600, .top = 142, .bottom = 178, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.cutoff_slider.rec = cutoff_rec;
-	plugin->gui->elements.cutoff_slider.rec_value = 
+	plugin->gui->elements.cutoff_slider.rec_value =
 		compute_horizontal_slider_rec(cutoff_rec, 20, cutoff, 1.0f);
 	plugin->gui->elements.cutoff_slider.param_value = cutoff;
 
-	rectangle_t env_on_rec = { 
-		.left = 471, .right = 600, .top = 190, .bottom = 226,
-		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	rectangle_t env_on_rec = {
+		.left = 471, .right = 600, .top = 190, .bottom = 226, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_env_on_box.rec = env_on_rec;
 	plugin->gui->elements.filter_env_on_box.param_value = f_env_on;
-
 
 	create_waveform_menu(
 		plugin, &plugin->gui->elements.wave_a,
@@ -685,8 +676,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 	create_waveform_menu(
 		plugin, &plugin->gui->elements.wave_c,
 		212, 294, 166, 202, BLACK, GRAY, P_WAVE_C);
-	
-	
+
 	/* Load the font from the asset header */
 	gui_load_font_mem(__embedded_font);
 }
@@ -697,14 +687,14 @@ static void update_slider(slider_t *slider, uint32_t width, float new_val, float
 	if (slider->param_value != new_val)
 	{
 		slider->param_value = new_val;
-		slider->rec_value = 
+		slider->rec_value =
 			compute_horizontal_slider_rec(
 				slider->rec, width, new_val, val_max);
 	}
 }
 
 /* Update slider position with the parameter data */
-/* Updates even if the data is changed from 
+/* Updates even if the data is changed from
 the parameter view of the host and not the GUI view*/
 static void update_sliders(synth_plugin_t *p)
 {
@@ -758,27 +748,27 @@ static void draw_waveforms_menu(synth_plugin_t *plugin, uint8_t wave)
 		for (int i = 0; i < 4; i++)
 		{
 			uint32_t txt_w = get_text_width(waveforms.entries[i].name, 10);
-			int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-			int txt_y =  waveforms.entries[i].rec.top + 10;
+			int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+			int txt_y = waveforms.entries[i].rec.top + 10;
 
 			plugin_paint_rec(plugin->gui->bits, waveforms.entries[i].rec);
 			plugin_paint_text(
 				plugin->gui->bits,
-				txt_x, txt_y, 
+				txt_x, txt_y,
 				waveforms.entries[i].name,
 				10, BLACK);
 		}
 	}
-	else 
+	else
 	{
 		uint32_t txt_w = get_text_width(waveforms.selected.name, 10);
-		int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-		int txt_y =  waveforms.base_rec.top + 10;
+		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y = waveforms.base_rec.top + 10;
 
 		plugin_paint_rec(plugin->gui->bits, waveforms.base_rec);
 		plugin_paint_text(
 			plugin->gui->bits,
-			txt_x, txt_y, 
+			txt_x, txt_y,
 			waveforms.selected.name,
 			10, BLACK);
 	}
@@ -786,47 +776,45 @@ static void draw_waveforms_menu(synth_plugin_t *plugin, uint8_t wave)
 	if (wave == P_WAVE_A)
 	{
 		uint32_t txt_w = get_text_width("Osc A", 10);
-		int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-		int txt_y =  waveforms.base_rec.top - 10;
-		plugin_paint_text(plugin->gui->bits, 
-			txt_x, txt_y, "Osc A", 10, BLACK);
+		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y = waveforms.base_rec.top - 10;
+		plugin_paint_text(plugin->gui->bits,
+						  txt_x, txt_y, "Osc A", 10, BLACK);
 	}
 	else if (wave == P_WAVE_B)
 	{
 		uint32_t txt_w = get_text_width("Osc B", 10);
-		int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-		int txt_y =  waveforms.base_rec.top - 10;
-		plugin_paint_text(plugin->gui->bits, 
-			txt_x, txt_y, "Osc B", 10, BLACK);
+		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y = waveforms.base_rec.top - 10;
+		plugin_paint_text(plugin->gui->bits,
+						  txt_x, txt_y, "Osc B", 10, BLACK);
 	}
 	else if (wave == P_WAVE_C)
 	{
 		uint32_t txt_w = get_text_width("Osc C", 10);
-		int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-		int txt_y =  waveforms.base_rec.top - 10;
-		plugin_paint_text(plugin->gui->bits, 
-			txt_x, txt_y, "Osc C", 10, BLACK);
+		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y = waveforms.base_rec.top - 10;
+		plugin_paint_text(plugin->gui->bits,
+						  txt_x, txt_y, "Osc C", 10, BLACK);
 	}
 }
 
-void plugin_paint(synth_plugin_t *plugin, uint32_t *bits) 
+void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 {
 	/* Update the sliders cursors positions */
 	update_sliders(plugin);
 
 	/* Clear the bitmap */
-	rectangle_t background = 
-	{	.left = 0, .right = GUI_WIDTH, .top = 0, .bottom = GUI_HEIGHT,
-		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
+	rectangle_t background =
+		{.left = 0, .right = GUI_WIDTH, .top = 0, .bottom = GUI_HEIGHT, .border_color = BLACK, .fill_color = WHITE, .border_width = 1};
 	plugin_paint_rec(bits, background);
 
 	/* Draw the piano visualizer */
 	draw_piano_keyboard(plugin);
-	
+
 	/* Painting ADSR sliders */
-	rectangle_t adsr_rec = 
-	{	.left = 12, .right = 306, .top = 12, .bottom = 119,
-		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
+	rectangle_t adsr_rec =
+		{.left = 12, .right = 306, .top = 12, .bottom = 119, .border_color = BLACK, .fill_color = WHITE, .border_width = 1};
 	plugin_paint_rec(bits, adsr_rec);
 	plugin_paint_slider_name(bits, plugin->gui->elements.adsr_sliders[0], "Attack", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.adsr_sliders[1], "Decay", 10);
@@ -834,20 +822,17 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 	plugin_paint_slider_name(bits, plugin->gui->elements.adsr_sliders[3], "Release", 10);
 
 	/* Painting filter ADSR sliders and cutoff */
-	rectangle_t filter_adsr_rec = 
-	{	.left = 318, .right = 612, .top = 12, .bottom = 119,
-		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
+	rectangle_t filter_adsr_rec =
+		{.left = 318, .right = 612, .top = 12, .bottom = 119, .border_color = BLACK, .fill_color = WHITE, .border_width = 1};
 	plugin_paint_rec(bits, filter_adsr_rec);
 	plugin_paint_slider_name(bits, plugin->gui->elements.filter_adsr_sliders[0], "Attack", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.filter_adsr_sliders[1], "Decay", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.filter_adsr_sliders[2], "Sustain", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.filter_adsr_sliders[3], "Release", 10);
 
-
 	/* Miscellanous synthesizer parameters */
-	rectangle_t params_rec = 
-	{	.left = 318, .right = 612, .top = 131, .bottom = 238,
-		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
+	rectangle_t params_rec =
+		{.left = 318, .right = 612, .top = 131, .bottom = 238, .border_color = BLACK, .fill_color = WHITE, .border_width = 1};
 	plugin_paint_rec(bits, params_rec);
 	plugin_paint_slider_name(bits, plugin->gui->elements.volume_slider, "Volume", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.detune_slider, "Detune", 10);
@@ -855,9 +840,8 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 	paint_checkbox(bits, plugin->gui->elements.filter_env_on_box);
 
 	/* Waveforms menus */
-	rectangle_t wave_rec = 
-	{	.left = 12, .right = 306, .top = 131, .bottom = 238,
- 		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
+	rectangle_t wave_rec =
+		{.left = 12, .right = 306, .top = 131, .bottom = 238, .border_color = BLACK, .fill_color = WHITE, .border_width = 1};
 	plugin_paint_rec(bits, wave_rec);
 	draw_waveforms_menu(plugin, P_WAVE_A);
 	draw_waveforms_menu(plugin, P_WAVE_B);
@@ -880,14 +864,16 @@ void plugin_process_mouse_drag(synth_plugin_t *plugin, int x, int y)
 		/* Calculate the new value from the drag */
 		float travel = (float)((slider.right - slider.left) - handle_width);
 		float new_val = (x - (float)slider.left) / travel;
-		if (new_val < 0.0f) new_val = 0.0f;
-		if (new_val > 1.0f) new_val = 1.0f;
+		if (new_val < 0.0f)
+			new_val = 0.0f;
+		if (new_val > 1.0f)
+			new_val = 1.0f;
 
 		/* Double the value if slider is 0.0 to 2.0 range */
 		bool is_2_range =
 			id == P_ATTACK || id == P_DECAY || id == P_RELEASE ||
 			id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_RELEASE;
-		
+
 		if (is_2_range)
 			new_val *= 2.0f;
 		else if (id == P_DETUNE)
@@ -941,8 +927,8 @@ static void change_waveform(synth_plugin_t *plugin, uint8_t p_wave, int x, int y
 
 	waveforms->entries_on = false;
 	waveforms->selected =
-			waveforms->entries[wave];
-	}
+		waveforms->entries[wave];
+}
 
 /* Mouse press handling, starting drag if we are on a slider */
 void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y)
@@ -950,7 +936,7 @@ void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y)
 	uint32_t param_id = get_param_gui(plugin->gui->elements, (uint32_t)x, (uint32_t)y);
 	if (param_id < P_COUNT)
 	{
-		if (param_id == P_WAVE_A && 
+		if (param_id == P_WAVE_A &&
 			!plugin->gui->elements.wave_a.entries_on)
 		{
 			plugin->mouse.mouse_dragging = false;
@@ -963,7 +949,7 @@ void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y)
 			plugin->mouse.mouse_dragging = false;
 			change_waveform(plugin, P_WAVE_A, x, y);
 		}
-		if (param_id == P_WAVE_B && 
+		if (param_id == P_WAVE_B &&
 			!plugin->gui->elements.wave_b.entries_on)
 		{
 			plugin->mouse.mouse_dragging = false;
@@ -976,7 +962,7 @@ void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y)
 			plugin->mouse.mouse_dragging = false;
 			change_waveform(plugin, P_WAVE_B, x, y);
 		}
-		if (param_id == P_WAVE_C && 
+		if (param_id == P_WAVE_C &&
 			!plugin->gui->elements.wave_c.entries_on)
 		{
 			plugin->mouse.mouse_dragging = false;
@@ -1039,8 +1025,8 @@ void plugin_process_mouse_release(synth_plugin_t *plugin)
 
 /* Check wether current API is supported */
 bool is_api_supported(
-	const clap_plugin_t *plugin, 
-	const char *api, 
+	const clap_plugin_t *plugin,
+	const char *api,
 	bool is_floating)
 {
 	(void)plugin;
@@ -1049,8 +1035,8 @@ bool is_api_supported(
 
 /* Get the prefered API */
 bool get_prefered_api(
-	const clap_plugin_t *plugin, 
-	const char **api, 
+	const clap_plugin_t *plugin,
+	const char **api,
 	bool *is_floating)
 {
 	(void)plugin;
@@ -1076,12 +1062,13 @@ void destroy(const clap_plugin_t *plugin)
 
 bool set_scale(const clap_plugin_t *plugin, double scale)
 {
-	(void)plugin; (void)scale;
+	(void)plugin;
+	(void)scale;
 	return false;
 }
 
 bool get_size(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	uint32_t *w, uint32_t *h)
 {
 	(void)plugin;
@@ -1098,10 +1085,11 @@ bool can_resize(const clap_plugin_t *plugin)
 }
 
 bool get_resize_hints(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	clap_gui_resize_hints_t *hints)
 {
-	(void)plugin; (void)hints;
+	(void)plugin;
+	(void)hints;
 	hints->can_resize_horizontally = false;
 	hints->can_resize_vertically = false;
 	hints->preserve_aspect_ratio = false;
@@ -1111,7 +1099,7 @@ bool get_resize_hints(
 }
 
 bool adjust_size(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	uint32_t *w, uint32_t *h)
 {
 	(void)plugin;
@@ -1121,7 +1109,7 @@ bool adjust_size(
 }
 
 bool set_size(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	uint32_t w, uint32_t h)
 {
 	(void)plugin;
@@ -1129,7 +1117,7 @@ bool set_size(
 }
 
 bool set_parent(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	const clap_window_t *window)
 {
 	gui_set_parent((synth_plugin_t *)plugin->plugin_data, window);
@@ -1137,14 +1125,19 @@ bool set_parent(
 }
 
 bool set_transient(
-	const clap_plugin_t *plugin, 
+	const clap_plugin_t *plugin,
 	const clap_window_t *window)
 {
-	(void)plugin; (void)window;
+	(void)plugin;
+	(void)window;
 	return false;
 }
 
-void suggest_title(const clap_plugin_t *plugin, const char *title) { (void)plugin; (void)title; }
+void suggest_title(const clap_plugin_t *plugin, const char *title)
+{
+	(void)plugin;
+	(void)title;
+}
 
 bool show(const clap_plugin_t *plugin)
 {
@@ -1159,30 +1152,28 @@ bool hide(const clap_plugin_t *plugin)
 {
 	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
 	gui_set_visible(p, false);
-	if (p->host_timer_support && p->host_timer_support->unregister_timer 
-		&& p->timer_id != CLAP_INVALID_ID)
-			p->host_timer_support->unregister_timer(p->host, p->timer_id);
+	if (p->host_timer_support && p->host_timer_support->unregister_timer && p->timer_id != CLAP_INVALID_ID)
+		p->host_timer_support->unregister_timer(p->host, p->timer_id);
 	return true;
 }
 
 /* CLAP GUI extension */
 const clap_plugin_gui_t gui_ext =
-{
-	.is_api_supported = is_api_supported,
-	.get_preferred_api = get_prefered_api,
-	.create = create,
-	.destroy = destroy,
-	.set_scale = set_scale,
-	.get_size = get_size,
-	.can_resize = can_resize,
-	.get_resize_hints = get_resize_hints,
-	.adjust_size = adjust_size,
-	.set_size = set_size,
-	.set_parent = set_parent,
-	.set_transient = set_transient,
-	.suggest_title = suggest_title,
-	.show = show,
-	.hide = hide
-};
+	{
+		.is_api_supported = is_api_supported,
+		.get_preferred_api = get_prefered_api,
+		.create = create,
+		.destroy = destroy,
+		.set_scale = set_scale,
+		.get_size = get_size,
+		.can_resize = can_resize,
+		.get_resize_hints = get_resize_hints,
+		.adjust_size = adjust_size,
+		.set_size = set_size,
+		.set_parent = set_parent,
+		.set_transient = set_transient,
+		.suggest_title = suggest_title,
+		.show = show,
+		.hide = hide};
 
-#endif 
+#endif

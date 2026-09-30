@@ -5,7 +5,7 @@
 #include "libxml/parser.h"
 #include "libxml/tree.h"
 
-/* Dirty and ugly trick to have both raylib 
+/* Dirty and ugly trick to have both raylib
 and Windows API working together */
 #define INITGUID
 #define WIN32_LEAN_AND_MEAN
@@ -47,7 +47,7 @@ int save_preset(
 	float sustain, float release,
 	int wave_a, int wave_b, int wave_c,
 	char *preset_filename, bool *saving_preset,
-	bool distortion, bool overdrive, 
+	bool distortion, bool overdrive,
 	float distortion_amount)
 {
 
@@ -150,7 +150,7 @@ int save_preset(
 		/* BPM */
 		snprintf(text_element, 1024, "%.2f", synth.bpm);
 		xmlNewChild(effects_node, NULL, BAD_CAST "bpm", BAD_CAST text_element);
-		
+
 		/* LFO*/
 		lfo_node = xmlNewChild(effects_node, NULL, BAD_CAST "lfo", NULL);
 		/* LFO waveform */
@@ -198,8 +198,8 @@ int load_preset(
 	float *attack, float *decay,
 	float *sustain, float *release,
 	int *wave_a, int *wave_b, int *wave_c,
-	bool *distortion, bool *overdrive, 
-	float *distortion_amount, 
+	bool *distortion, bool *overdrive,
+	float *distortion_amount,
 	bool *loading_preset)
 {
 	char filename[1024];
@@ -214,11 +214,11 @@ int load_preset(
 		*loading_preset = false;
 		return 1;
 	}
-	
+
 	/* Opening the file dialog */
 	IFileOpenDialog *file_dialog;
-	hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL, 
-		&IID_IFileOpenDialog, (void **)(&file_dialog));
+	hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+						  &IID_IFileOpenDialog, (void **)(&file_dialog));
 	if (!SUCCEEDED(hr))
 	{
 		CoUninitialize();
@@ -238,7 +238,7 @@ int load_preset(
 		return 1;
 	}
 
-	/* Getting the item selected by 
+	/* Getting the item selected by
 	the user from the file dialog */
 	IShellItem *item;
 	hr = file_dialog->lpVtbl->GetResult(file_dialog, &item);
@@ -265,12 +265,12 @@ int load_preset(
 		return 1;
 	}
 
-	/* Converting the PWSTR file path 
+	/* Converting the PWSTR file path
 	to the char file path*/
 	WideCharToMultiByte(
-		CP_UTF8, 0, 
-		file_path, -1, 
-		filename, sizeof(filename), 
+		CP_UTF8, 0,
+		file_path, -1,
+		filename, sizeof(filename),
 		NULL, NULL);
 
 	/* Free the Windows file dialog window */
@@ -340,8 +340,8 @@ int load_preset(
 		else if (node->type == XML_ELEMENT_NODE &&
 				 xmlStrcmp(node->name, BAD_CAST "effects") == 0)
 		{
-			parse_effects(node, synth, 
-				distortion, overdrive, distortion_amount);    
+			parse_effects(node, synth,
+						  distortion, overdrive, distortion_amount);
 		}
 	}
 
@@ -349,7 +349,7 @@ int load_preset(
 }
 
 int parse_effects(xmlNode *effects_node, synth_t *synth,
-		bool *distortion, bool *overdrive, float *distortion_amount)
+				  bool *distortion, bool *overdrive, float *distortion_amount)
 {
 	xmlNode *child = NULL;
 	/* Looping on effects */
@@ -380,7 +380,7 @@ int parse_effects(xmlNode *effects_node, synth_t *synth,
 		}
 		/* Amplification */
 		else if (child->type == XML_ELEMENT_NODE &&
-					xmlStrcmp(child->name, BAD_CAST "amp") == 0)
+				 xmlStrcmp(child->name, BAD_CAST "amp") == 0)
 		{
 			xmlChar *amp = xmlNodeGetContent(child);
 			char *end_ptr = NULL;
@@ -393,7 +393,7 @@ int parse_effects(xmlNode *effects_node, synth_t *synth,
 
 			if (amp_float > 1.0)
 			{
-				amp_float = 1.0;                        
+				amp_float = 1.0;
 			}
 			else if (amp_float < 0.0)
 			{
@@ -402,7 +402,7 @@ int parse_effects(xmlNode *effects_node, synth_t *synth,
 			synth->amp = amp_float;
 		}
 		else if (child->type == XML_ELEMENT_NODE &&
-				xmlStrcmp(child->name, BAD_CAST "arp") == 0)
+				 xmlStrcmp(child->name, BAD_CAST "arp") == 0)
 		{
 			xmlChar *arp = xmlNodeGetContent(child);
 			char *end_ptr = NULL;
@@ -423,8 +423,8 @@ int parse_effects(xmlNode *effects_node, synth_t *synth,
 			}
 			synth->arp = arp_int;
 		}
-		else if (child->type == XML_ELEMENT_NODE && 
-				xmlStrcmp(child->name, BAD_CAST "bpm") == 0)
+		else if (child->type == XML_ELEMENT_NODE &&
+				 xmlStrcmp(child->name, BAD_CAST "bpm") == 0)
 		{
 			xmlChar *bpm = xmlNodeGetContent(child);
 			char *end_ptr = NULL;
@@ -447,29 +447,29 @@ int parse_effects(xmlNode *effects_node, synth_t *synth,
 		}
 		/* LFO */
 		else if (child->type == XML_ELEMENT_NODE &&
-				xmlStrcmp(child->name, BAD_CAST "lfo") == 0)
+				 xmlStrcmp(child->name, BAD_CAST "lfo") == 0)
 		{
 			parse_lfo(child, synth);
 		}
 		/* Distortion */
 		else if (child->type == XML_ELEMENT_NODE &&
-				xmlStrcmp(child->name, BAD_CAST "distortion") == 0)
+				 xmlStrcmp(child->name, BAD_CAST "distortion") == 0)
 		{
 			parse_distortion(child, distortion,
-				overdrive, distortion_amount);
+							 overdrive, distortion_amount);
 		}
 	}
 	return 0;
 }
 
-int parse_filter(xmlNode *filter_node, 
-				synth_t *synth)
+int parse_filter(xmlNode *filter_node,
+				 synth_t *synth)
 {
 	xmlNode *child = NULL;
 
 	/* Looping on the filter node children */
 	for (child = filter_node->children; child; child = child->next)
-	{   /* Filter ADSR envelope */
+	{ /* Filter ADSR envelope */
 		if (child->type == XML_ELEMENT_NODE &&
 			xmlStrcmp(child->name, BAD_CAST "filter_adsr") == 0)
 		{
@@ -479,7 +479,7 @@ int parse_filter(xmlNode *filter_node,
 		}
 		/* Filter cutoff */
 		else if (child->type == XML_ELEMENT_NODE &&
-					xmlStrcmp(child->name, BAD_CAST "cutoff") == 0)
+				 xmlStrcmp(child->name, BAD_CAST "cutoff") == 0)
 		{
 			xmlChar *cutoff = xmlNodeGetContent(child);
 			char *end_ptr = NULL;
@@ -502,7 +502,7 @@ int parse_filter(xmlNode *filter_node,
 		}
 		/* Filter ADSR envelope ON/OFF */
 		else if (child->type == XML_ELEMENT_NODE &&
-					xmlStrcmp(child->name, BAD_CAST "envelope_on") == 0)
+				 xmlStrcmp(child->name, BAD_CAST "envelope_on") == 0)
 		{
 			xmlChar *envelope_on = xmlNodeGetContent(child);
 			char *end_ptr = NULL;
@@ -527,13 +527,13 @@ int parse_filter(xmlNode *filter_node,
 	return 0;
 }
 
-int parse_oscillators(xmlNode *lfo_node, 
-	int *wave_a, int *wave_b, int *wave_c)
+int parse_oscillators(xmlNode *lfo_node,
+					  int *wave_a, int *wave_b, int *wave_c)
 {
 	xmlNode *child = NULL;
 	/* Looping on the oscillators nodes*/
 	for (child = lfo_node->children; child; child = child->next)
-	{   /* Oscillator A */
+	{ /* Oscillator A */
 		if (child->type == XML_ELEMENT_NODE &&
 			xmlStrcmp(child->name, BAD_CAST "osc_a") == 0)
 		{
@@ -558,7 +558,7 @@ int parse_oscillators(xmlNode *lfo_node,
 		}
 		/* Oscillator B */
 		else if (child->type == XML_ELEMENT_NODE &&
-					xmlStrcmp(child->name, BAD_CAST "osc_b") == 0)
+				 xmlStrcmp(child->name, BAD_CAST "osc_b") == 0)
 		{
 			xmlChar *osc_b = xmlNodeGetContent(child);
 			char *end_ptr = NULL;
@@ -581,7 +581,7 @@ int parse_oscillators(xmlNode *lfo_node,
 		}
 		/* Oscillator C */
 		else if (child->type == XML_ELEMENT_NODE &&
-					xmlStrcmp(child->name, BAD_CAST "osc_c") == 0)
+				 xmlStrcmp(child->name, BAD_CAST "osc_c") == 0)
 		{
 			xmlChar *osc_c = xmlNodeGetContent(child);
 			char *end_ptr = NULL;
@@ -609,7 +609,7 @@ int parse_oscillators(xmlNode *lfo_node,
 int parse_lfo(xmlNode *lfo_node, synth_t *synth)
 {
 	xmlNode *lfo_child = NULL;
-					
+
 	for (lfo_child = lfo_node->children; lfo_child; lfo_child = lfo_child->next)
 	{
 		/* LFO waveform*/
@@ -636,7 +636,7 @@ int parse_lfo(xmlNode *lfo_node, synth_t *synth)
 			synth->lfo.osc.wave = lfo_wave_int;
 		}
 		else if (lfo_child->type == XML_ELEMENT_NODE &&
-				xmlStrcmp(lfo_child->name, BAD_CAST "lfo_freq") == 0)
+				 xmlStrcmp(lfo_child->name, BAD_CAST "lfo_freq") == 0)
 		{
 			xmlChar *lfo_freq = xmlNodeGetContent(lfo_child);
 			char *end_ptr = NULL;
@@ -658,7 +658,7 @@ int parse_lfo(xmlNode *lfo_node, synth_t *synth)
 			synth->lfo.osc.freq = lfo_freq_float;
 		}
 		else if (lfo_child->type == XML_ELEMENT_NODE &&
-				xmlStrcmp(lfo_child->name, BAD_CAST "lfo_param") == 0)
+				 xmlStrcmp(lfo_child->name, BAD_CAST "lfo_param") == 0)
 		{
 			xmlChar *lfo_param = xmlNodeGetContent(lfo_child);
 			char *end_ptr = NULL;
@@ -683,9 +683,8 @@ int parse_lfo(xmlNode *lfo_node, synth_t *synth)
 	return 0;
 }
 
-
-int parse_distortion(xmlNode *distortion_node, 
-	bool *distortion, bool *overdrive, float *distortion_amount)
+int parse_distortion(xmlNode *distortion_node,
+					 bool *distortion, bool *overdrive, float *distortion_amount)
 {
 	xmlNode *dist_child = NULL;
 
@@ -716,7 +715,7 @@ int parse_distortion(xmlNode *distortion_node,
 		}
 		/* Overdrive ON/OFF */
 		else if (dist_child->type == XML_ELEMENT_NODE &&
-			xmlStrcmp(dist_child->name, BAD_CAST "od_on_off") == 0)
+				 xmlStrcmp(dist_child->name, BAD_CAST "od_on_off") == 0)
 		{
 			xmlChar *od_on_off = xmlNodeGetContent(dist_child);
 			char *end_ptr = NULL;
@@ -739,7 +738,7 @@ int parse_distortion(xmlNode *distortion_node,
 		}
 		/* Distortion amount */
 		else if (dist_child->type == XML_ELEMENT_NODE &&
-			xmlStrcmp(dist_child->name, BAD_CAST "amount") == 0)
+				 xmlStrcmp(dist_child->name, BAD_CAST "amount") == 0)
 		{
 			xmlChar *dist_amount = xmlNodeGetContent(dist_child);
 			char *end_ptr = NULL;
@@ -792,11 +791,11 @@ int parse_adsr(
 			{
 				attack_float = 2.0;
 			}
-			else if (attack_float < 0.0) 
+			else if (attack_float < 0.0)
 			{
 				attack_float = 0.0;
 			}
-			
+
 			if (filter)
 			{
 				synth->filter.adsr.attack = attack_float;
@@ -824,10 +823,9 @@ int parse_adsr(
 			}
 			else if (decay_float < 0.0)
 			{
-			decay_float = 0.0;
-
+				decay_float = 0.0;
 			}
-				
+
 			if (filter)
 			{
 				synth->filter.adsr.decay = decay_float;

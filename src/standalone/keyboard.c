@@ -11,9 +11,9 @@
  * Change the cutoff, detune and amplification when the assigned keys are being pressed
  * Change the keyboard octave when UP or DOWN keys are being pressed
  */
-void handle_input(synth_t *synth, int *octave, 
-	float *attack, float *decay, float *sustain, float *release,
-	int *osc_a_wave, int *osc_b_wave, int *osc_c_wave)
+void handle_input(synth_t *synth, int *octave,
+				  float *attack, float *decay, float *sustain, float *release,
+				  int *osc_a_wave, int *osc_b_wave, int *osc_c_wave)
 {
 	int octave_length = *octave * 12;
 
@@ -44,7 +44,7 @@ void handle_input(synth_t *synth, int *octave,
 	if (IsKeyPressed(KEY_UP))
 	{
 		(*octave)++;
-		/* Releasing all of the voices so that some notes 
+		/* Releasing all of the voices so that some notes
 		don't get stucked when sustain is not at 0.0 */
 		for (int v = 0; v < VOICES; v++)
 		{
@@ -56,7 +56,7 @@ void handle_input(synth_t *synth, int *octave,
 	else if (IsKeyPressed(KEY_DOWN))
 	{
 		(*octave)--;
-		/* Releasing all of the voices so that some notes 
+		/* Releasing all of the voices so that some notes
 		don't get stucked when sustain is not at 0.0 */
 		for (int v = 0; v < VOICES; v++)
 		{
@@ -64,35 +64,35 @@ void handle_input(synth_t *synth, int *octave,
 			synth->voices[v].pressed = 0;
 			synth->voices[v].note = -1;
 		}
-			
 	}
-	else if (IsKeyDown(KEY_ADSR)) {
+	else if (IsKeyDown(KEY_ADSR))
+	{
 		if (IsKeyPressed(KEY_ATT))
-			{
-				*attack += 0.1f;
-				if (*attack >= 2.0f)
-					*attack = 0.0f;
-			}
-			else if (IsKeyPressed(KEY_DEC))
-			{
-				*decay += 0.1f;
-				if (*decay >= 2.0f)
-					*decay = 0.0f;
-			}
-			else if (IsKeyPressed(KEY_SUS))
-			{
-				*sustain += 0.1f;
-				if (*sustain >= 1.0f)
-					*sustain = 0.0f;
-			}
-			else if (IsKeyPressed(KEY_REL))
-			{
-				*release += 0.1f;
-				if (*release >= 1.0f)
-					*release = 0.0f;
-			}
+		{
+			*attack += 0.1f;
+			if (*attack >= 2.0f)
+				*attack = 0.0f;
+		}
+		else if (IsKeyPressed(KEY_DEC))
+		{
+			*decay += 0.1f;
+			if (*decay >= 2.0f)
+				*decay = 0.0f;
+		}
+		else if (IsKeyPressed(KEY_SUS))
+		{
+			*sustain += 0.1f;
+			if (*sustain >= 1.0f)
+				*sustain = 0.0f;
+		}
+		else if (IsKeyPressed(KEY_REL))
+		{
+			*release += 0.1f;
+			if (*release >= 1.0f)
+				*release = 0.0f;
+		}
 	}
-			
+
 	else if (IsKeyPressed(KEY_OSC_A))
 	{
 		(*osc_a_wave)++;
@@ -102,20 +102,19 @@ void handle_input(synth_t *synth, int *octave,
 	{
 		(*osc_b_wave)++;
 		*osc_b_wave %= 4;
-	}	
+	}
 	else if (IsKeyPressed(KEY_OSC_C))
 	{
 		(*osc_c_wave)++;
 		*osc_c_wave %= 4;
 	}
-		
 }
 
 /* Free the synth voices when their assigned note key are being released */
 void handle_release(synth_t *synth, int octave)
 {
 	int octave_length = octave * 12;
-	
+
 	if (IsKeyReleased(kC))
 		release_note(synth, octave_length + nC);
 	if (IsKeyReleased(kC_SHARP))
@@ -154,7 +153,6 @@ void assign_note(synth_t *synth, int midi_note)
 			{
 				pressed_voices++;
 			}
-				
 
 			/* Cutting all the voices that are in ADSR release state to avoid blocking voices */
 			if (synth->voices[v].adsr.state == ENV_RELEASE && !synth->arp)
@@ -164,7 +162,7 @@ void assign_note(synth_t *synth, int midi_note)
 		}
 
 		voice_t *free_voice = get_free_voice(synth);
-		if (free_voice == NULL) 
+		if (free_voice == NULL)
 		{
 			return;
 		}
@@ -175,7 +173,6 @@ void assign_note(synth_t *synth, int midi_note)
 		{
 			synth->filter.adsr.state = ENV_ATTACK;
 		}
-			
 
 		if (synth->arp)
 		{
@@ -185,14 +182,14 @@ void assign_note(synth_t *synth, int midi_note)
 				synth->active_arp_float = 1.0;
 			}
 		}
-			
+
 		return;
 	}
 }
 
 /* Release a note from a synth voice, does nothing if the note isn't pressed */
 void release_note(synth_t *synth, int midi_note)
-{   
+{
 	int pressed_voices = 0;
 
 	for (int v = 0; v < VOICES; v++)
@@ -202,10 +199,10 @@ void release_note(synth_t *synth, int midi_note)
 			pressed_voices++;
 		}
 	}
-		
+
 	for (int v = 0; v < VOICES; v++)
 	{
-		if (synth->voices[v].note == midi_note && 
+		if (synth->voices[v].note == midi_note &&
 			synth->voices[v].pressed == 1)
 		{
 			if (synth->arp && synth->voices[v].adsr.state != ENV_IDLE)
@@ -213,27 +210,27 @@ void release_note(synth_t *synth, int midi_note)
 				synth->voices[v].adsr.state = ENV_IDLE;
 			}
 			else if (
-			   !synth->arp && 
+				!synth->arp &&
 				synth->voices[v].adsr.state != ENV_RELEASE &&
 				synth->voices[v].adsr.state != ENV_IDLE)
 			{
 				synth->voices[v].adsr.state = ENV_RELEASE;
 			}
-				
+
 			synth->voices[v].note = -1;
 			synth->voices[v].pressed = 0;
-				
+
 			break;
 		}
 	}
-		
+
 	if (synth->arp)
 	{
 		sort_synth_voices(synth);
 		if (pressed_voices == 2)
 		{
 			synth->active_arp_float = 1.0;
-		}   
+		}
 	}
 }
 

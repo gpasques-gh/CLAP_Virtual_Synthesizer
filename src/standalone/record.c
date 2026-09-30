@@ -31,17 +31,17 @@ int init_wav_header(wav_header_t *header)
 
 	header->num_channels = MONO;
 	header->bits_per_sample = BITS;
-	header->sub2_size = 300 * MAX_SAMPLES * (unsigned int) header->num_channels * (unsigned int) header->bits_per_sample / 8;
-	header->chunk_size = (unsigned int) header->sub2_size + 36;
+	header->sub2_size = 300 * MAX_SAMPLES * (unsigned int)header->num_channels * (unsigned int)header->bits_per_sample / 8;
+	header->chunk_size = (unsigned int)header->sub2_size + 36;
 	header->sub1_size = 16;
 	header->audio_format = 1;
 	header->sample_rate = RATE;
-	header->byte_rate = 
-		(unsigned int) header->sample_rate *
-		(unsigned int) header->num_channels *
-		(unsigned int) header->bits_per_sample / 8;
-	header->block_align = (unsigned int) header->num_channels * (unsigned int) header->bits_per_sample / 8;
-		
+	header->byte_rate =
+		(unsigned int)header->sample_rate *
+		(unsigned int)header->num_channels *
+		(unsigned int)header->bits_per_sample / 8;
+	header->block_align = (unsigned int)header->num_channels * (unsigned int)header->bits_per_sample / 8;
+
 	return 0;
 }
 
@@ -71,10 +71,10 @@ int close_wav_file(FILE *fwav)
 		if (err)
 		{
 			fprintf(stderr, "cannot close wav file\n");
-			return 1;    
+			return 1;
 		}
-	}   
-	else 
+	}
+	else
 	{
 		fprintf(stderr, "cannot close wav file\n");
 		return 1;

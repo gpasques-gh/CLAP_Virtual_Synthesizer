@@ -28,7 +28,7 @@ int save_preset(
 	float sustain, float release,
 	int wave_a, int wave_b, int wave_c,
 	char *preset_filename, bool *saving_preset,
-	bool distortion, bool overdrive, 
+	bool distortion, bool overdrive,
 	float distortion_amount);
 
 /*
@@ -44,24 +44,24 @@ int load_preset(
 	synth_t *synth,
 	float *attack, float *decay,
 	float *sustain, float *release,
-	int *wave_a, int *wave_b, int *wave_c, 
-	bool *distortion, bool *overdrive, 
+	int *wave_a, int *wave_b, int *wave_c,
+	bool *distortion, bool *overdrive,
 	float *distortion_amount,
 	bool *loading_preset);
 
-int parse_filter(xmlNode *filter_node, 
-				synth_t *synth);
+int parse_filter(xmlNode *filter_node,
+				 synth_t *synth);
 
 int parse_effects(xmlNode *effects_node, synth_t *synth,
-		bool *distortion, bool *overdrive, float *distortion_amount);
+				  bool *distortion, bool *overdrive, float *distortion_amount);
 
-int parse_oscillators(xmlNode *osc_node, 
-	int *wave_a, int *wave_b, int *wave_c);
+int parse_oscillators(xmlNode *osc_node,
+					  int *wave_a, int *wave_b, int *wave_c);
 
 int parse_lfo(xmlNode *lfo_node, synth_t *synth);
 
-int parse_distortion(xmlNode *distortion_node, 
-	bool *distortion, bool *overdrive, float *distortion_amount);
+int parse_distortion(xmlNode *distortion_node,
+					 bool *distortion, bool *overdrive, float *distortion_amount);
 
 /* Parse an ADSR XML Node whether it's basic ADSR of filter ADSR */
 int parse_adsr(

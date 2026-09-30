@@ -1,9 +1,8 @@
 #ifndef __CLAP__
 
-
 #ifdef __WINDOWS__
 #include "standalone/win_defs.h"
-#endif 
+#endif
 
 #define RAYGUI_IMPLEMENTATION
 #include "lib_raygui/src/raygui.h"
@@ -12,16 +11,17 @@
 #include <windows.h>
 
 #ifdef NOGDI
-typedef struct tagBITMAPINFOHEADER {
+typedef struct tagBITMAPINFOHEADER
+{
 	DWORD biSize;
-	LONG  biWidth;
-	LONG  biHeight;
-	WORD  biPlanes;
-	WORD  biBitCount;
+	LONG biWidth;
+	LONG biHeight;
+	WORD biPlanes;
+	WORD biBitCount;
 	DWORD biCompression;
 	DWORD biSizeImage;
-	LONG  biXPelsPerMeter;
-	LONG  biYPelsPerMeter;
+	LONG biXPelsPerMeter;
+	LONG biYPelsPerMeter;
 	DWORD biClrUsed;
 	DWORD biClrImportant;
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER, *LPBITMAPINFOHEADER;
@@ -57,7 +57,7 @@ typedef struct tagBITMAPINFOHEADER {
 #include "standalone/midi.h"
 
 #if !defined(__WINDOWS__) && !defined(__LINUX__)
-	#error "Unsupported OS."
+#error "Unsupported OS."
 #endif
 
 /* Prints the usage of the CLI arguments into the error output */
@@ -93,15 +93,15 @@ int main(int argc, char **argv)
 			return 1;
 		}
 	}
-	
+
 	int octave = DEFAULT_OCTAVE;
-	
+
 	/* SYNTHESIZER COMPONENTS */
 
 	/* Waveforms*/
 	int wave_a = SINE_WAVE, wave_b = SINE_WAVE, wave_c = SINE_WAVE;
 	int osc_lfo = SINE_WAVE;
-	
+
 	/* ADSR envelope parameters */
 	float attack = 0.2;
 	float decay = 0.3;
@@ -113,7 +113,6 @@ int main(int argc, char **argv)
 	float filter_decay = 0.3;
 	float filter_sustain = 0.0;
 	float filter_release = 0.2;
-
 
 	/* Filter ADSR envelope */
 	adsr_t filter_adsr =
@@ -142,11 +141,11 @@ int main(int argc, char **argv)
 			.wave = osc_lfo};
 
 	/* Low Frequency Oscillator */
-	lfo_t lfo = 
+	lfo_t lfo =
 		{
 			.osc = lfo_osc,
 			.mod_param = LFO_OFF};
-	
+
 	/* Polyphonic Synthesizer */
 	synth_t synth =
 		{
@@ -236,8 +235,8 @@ int main(int argc, char **argv)
 	ctx.synth = synth;
 	ctx.buffer_free[0] =
 		ctx.buffer_free[1] =
-		ctx.buffer_free[2] =
-		ctx.buffer_free[3] = 1;
+			ctx.buffer_free[2] =
+				ctx.buffer_free[3] = 1;
 	InitializeCriticalSection(&ctx.lock);
 
 	/* Open the sound card */
@@ -247,7 +246,7 @@ int main(int argc, char **argv)
 		WAVE_MAPPER,
 		(WAVEFORMATEX *)&wfx,
 		(DWORD_PTR)waveOutProc,
-		(DWORD_PTR)&ctx, 
+		(DWORD_PTR)&ctx,
 		CALLBACK_FUNCTION);
 
 	if (sound_res != MMSYSERR_NOERROR)
@@ -275,10 +274,10 @@ int main(int argc, char **argv)
 			midi_valid = 0;
 		}
 
-		/* Check if the given port 
+		/* Check if the given port
 		is a valid integer */
 		char *endptr;
-		midi_id = 
+		midi_id =
 			strtol(midi_device, &endptr, 10);
 		if (endptr == midi_device)
 			midi_valid = 0;
@@ -302,9 +301,9 @@ int main(int argc, char **argv)
 
 		/* Open the MIDI interface */
 		MMRESULT midi_res = midiInOpen(
-			&midi_in, midi_id, 
-			(DWORD_PTR)MidiInProc, 
-			(DWORD_PTR)&ctx.midi_queue, 
+			&midi_in, midi_id,
+			(DWORD_PTR)MidiInProc,
+			(DWORD_PTR)&ctx.midi_queue,
 			CALLBACK_FUNCTION);
 
 		if (midi_res != MMSYSERR_NOERROR)
@@ -385,9 +384,9 @@ int main(int argc, char **argv)
 	/* Create and run the audio thread */
 	pthread_t audio_thread_id;
 	pthread_create(
-		&audio_thread_id, 
-		NULL, 
-		&audio_thread_proc, 
+		&audio_thread_id,
+		NULL,
+		&audio_thread_proc,
 		&ctx);
 #endif
 	/* WAVE recording variables */
@@ -417,9 +416,9 @@ int main(int argc, char **argv)
 		/* Handle keyboard input from the user */
 		if (!saving_preset && !saving_audio_file)
 		{
-			handle_input(synth_ptr, &octave, 
-				&attack, &decay, &sustain, &release,
-				&wave_a, &wave_b, &wave_c);
+			handle_input(synth_ptr, &octave,
+						 &attack, &decay, &sustain, &release,
+						 &wave_a, &wave_b, &wave_c);
 			handle_release(synth_ptr, octave);
 		}
 
@@ -438,7 +437,7 @@ int main(int argc, char **argv)
 		pthread_mutex_lock(&ctx.lock);
 		memcpy(buffer, ctx.buffer, sizeof(buffer));
 		pthread_mutex_unlock(&ctx.lock);
-#endif 
+#endif
 		/* Start recording if the WAVE file is not initialized*/
 		if (ctx.recording_file == NULL && recording == true)
 		{
@@ -454,102 +453,102 @@ int main(int argc, char **argv)
 		{
 			ctx.recording_on = 0;
 		}
-	
+
 		/* Graphical User Interface rendering */
 		BeginDrawing();
-			ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
-			
-			/* Title */
-			GuiLabel((Rectangle){WIDTH / 2 - 115, 5, 230, 20}, "ALSA & raygui Synthesizer");
-			/* Waveform visualizer */
-			render_waveform(buffer);
-			/* ADSR envelope GUI */
-			render_adsr(&attack, &decay, &sustain, &release);
-			/* Filter ADSR envelope GUI */
-			render_filter_adsr(&filter_attack, &filter_decay, &filter_sustain, &filter_release);
-			/* Oscillators waveforms selection GUI */
-			render_osc_waveforms(
+		ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
+
+		/* Title */
+		GuiLabel((Rectangle){WIDTH / 2 - 115, 5, 230, 20}, "ALSA & raygui Synthesizer");
+		/* Waveform visualizer */
+		render_waveform(buffer);
+		/* ADSR envelope GUI */
+		render_adsr(&attack, &decay, &sustain, &release);
+		/* Filter ADSR envelope GUI */
+		render_filter_adsr(&filter_attack, &filter_decay, &filter_sustain, &filter_release);
+		/* Oscillators waveforms selection GUI */
+		render_osc_waveforms(
+			&wave_a, &wave_b, &wave_c,
+			&ddm_a, &ddm_b, &ddm_c);
+		/* Miscelannous synthesizer parameters GUI */
+		render_synth_params(synth_ptr);
+		/* Miscelannous options GUI (presets loading/saving & recording) */
+		render_options(
+			synth_ptr,
+			audio_filename,
+			&saving_preset, &loading_preset,
+			&saving_audio_file, &recording);
+		/* Effects parameters GUI (LFO & distortion) */
+		render_effects(
+			synth_ptr,
+			&lfo_wave_ddm, &lfo_params_ddm,
+			&distortion_on, &overdrive,
+			&distortion_amount);
+
+		/* Loading preset, shows file dialog */
+		if (loading_preset)
+		{
+			load_preset(
+				synth_ptr,
+				&attack, &decay, &sustain, &release,
 				&wave_a, &wave_b, &wave_c,
-				&ddm_a, &ddm_b, &ddm_c);
-			/* Miscelannous synthesizer parameters GUI */
-			render_synth_params(synth_ptr);
-			/* Miscelannous options GUI (presets loading/saving & recording) */
-			render_options(
-				synth_ptr,
-				audio_filename,
-				&saving_preset, &loading_preset, 
-				&saving_audio_file, &recording);
-			/* Effects parameters GUI (LFO & distortion) */
-			render_effects(
-				synth_ptr,
-				&lfo_wave_ddm, &lfo_params_ddm,
 				&distortion_on, &overdrive,
-				&distortion_amount);
-			
-			/* Loading preset, shows file dialog */
-			if (loading_preset)
-			{
-				load_preset(
-					synth_ptr,
-					&attack, &decay, &sustain, &release,
-					&wave_a, &wave_b, &wave_c,
-					&distortion_on, &overdrive, 
-					&distortion_amount, 
-					&loading_preset);
-			}
-			
-			/* Saving preset, popup window for file name */
-			if (saving_preset)
-			{
-				save_preset(
-					*synth_ptr,
-					attack, decay, sustain, release,
-					wave_a, wave_b, wave_c,
-					preset_filename, &saving_preset, 
-					distortion_on, overdrive,
-					distortion_amount);
-			}
+				&distortion_amount,
+				&loading_preset);
+		}
 
-			update_synth_oscillators(synth_ptr, wave_a, wave_b, wave_c);
-			update_synth_envelope(synth_ptr, attack, decay, sustain, release);
-			update_filter_params(synth_ptr, synth_ptr->filter.cutoff, filter_attack, filter_decay, filter_sustain, filter_release, synth_ptr->filter.env);
+		/* Saving preset, popup window for file name */
+		if (saving_preset)
+		{
+			save_preset(
+				*synth_ptr,
+				attack, decay, sustain, release,
+				wave_a, wave_b, wave_c,
+				preset_filename, &saving_preset,
+				distortion_on, overdrive,
+				distortion_amount);
+		}
 
-			/* Keyboard visualizer rendering */
-			
-			/* White keys */
-			render_white_keys();
-			for (int v = 0; v < VOICES; v++)
-			{
-				if (synth_ptr->voices[v].pressed && 
-					!is_black_key(synth_ptr->voices[v].note))
-				{
-					render_key(synth_ptr->voices[v].note, false);
-				}
-			}
-			if (synth_ptr->arp && 
-				!is_black_key(synth_ptr->voices[synth_ptr->active_arp].note) &&
-				synth_ptr->voices[synth_ptr->active_arp].pressed)
-			{
-				render_key(synth_ptr->voices[synth_ptr->active_arp].note, true);
-			}
+		update_synth_oscillators(synth_ptr, wave_a, wave_b, wave_c);
+		update_synth_envelope(synth_ptr, attack, decay, sustain, release);
+		update_filter_params(synth_ptr, synth_ptr->filter.cutoff, filter_attack, filter_decay, filter_sustain, filter_release, synth_ptr->filter.env);
 
-			/* Black keys */
-			render_black_keys();
-			for (int v = 0; v < VOICES; v++)
+		/* Keyboard visualizer rendering */
+
+		/* White keys */
+		render_white_keys();
+		for (int v = 0; v < VOICES; v++)
+		{
+			if (synth_ptr->voices[v].pressed &&
+				!is_black_key(synth_ptr->voices[v].note))
 			{
-				if (synth_ptr->voices[v].pressed && 
-					is_black_key(synth_ptr->voices[v].note))
-				{
-					render_key(synth_ptr->voices[v].note, false);
-				}
+				render_key(synth_ptr->voices[v].note, false);
 			}
-			if (synth_ptr->arp && 
-				is_black_key(synth_ptr->voices[synth_ptr->active_arp].note) &&
-				synth_ptr->voices[synth_ptr->active_arp].pressed)
+		}
+		if (synth_ptr->arp &&
+			!is_black_key(synth_ptr->voices[synth_ptr->active_arp].note) &&
+			synth_ptr->voices[synth_ptr->active_arp].pressed)
+		{
+			render_key(synth_ptr->voices[synth_ptr->active_arp].note, true);
+		}
+
+		/* Black keys */
+		render_black_keys();
+		for (int v = 0; v < VOICES; v++)
+		{
+			if (synth_ptr->voices[v].pressed &&
+				is_black_key(synth_ptr->voices[v].note))
 			{
-				render_key(synth_ptr->voices[synth_ptr->active_arp].note, true);
+				render_key(synth_ptr->voices[v].note, false);
 			}
-			
+		}
+		if (synth_ptr->arp &&
+			is_black_key(synth_ptr->voices[synth_ptr->active_arp].note) &&
+			synth_ptr->voices[synth_ptr->active_arp].pressed)
+		{
+			render_key(synth_ptr->voices[synth_ptr->active_arp].note, true);
+		}
+
 		EndDrawing();
 	}
 
