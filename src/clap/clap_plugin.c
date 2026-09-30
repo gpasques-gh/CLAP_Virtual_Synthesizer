@@ -11,6 +11,110 @@
 #include "core/synth.h"
 #include "core/effects.h"
 
+#define STATE_MAGIC 0x53594E54u /* "SYNT" */
+#define STATE_VERSION 1u
+
+/* Clamp the parameter value by its minimum and maximum */
+static double clamp_param_value(clap_id id, double value)
+{
+	const param_desc_t *desc = param_desc_from_id(id);
+	if (!desc) return value;
+	
+	if (value < desc->min) value = desc->min;
+	if (value > desc->max) value = desc->max;
+
+	if (desc->flags & CLAP_PARAM_IS_STEPPED)
+		value = (double)(int)value;
+
+	return value;
+}
+
+/* STATE */
+static bool stream_write_all(const clap_ostream_t *s, const void *buf, uint64_t size)
+{
+	const char *ptr = (const char *)buf;
+	while (size > 0)
+	{
+		int64_t n = s->write(s, ptr, size);
+		if (n <= 0) return false;
+		ptr += n; size -= (uint64_t)n;
+	}
+	return true;
+}
+
+static bool stream_read_all(const clap_istream_t *s, void *buf, uint64_t size)
+{
+	char *ptr = (char *)buf;
+	while (size > 0)
+	{
+		int64_t n = s->read(s, ptr, size);
+		if (n <= 0) return false;
+		ptr += n; size -= (uint64_t)n;
+	}
+	return true;
+}
+
+static bool state_save(const clap_plugin_t *plugin, const clap_ostream_t *stream)
+{
+	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
+
+	/* Save the state headers */
+	uint32_t header[3] = { STATE_MAGIC, STATE_VERSION, P_COUNT };
+	if (!stream_write_all(stream, header, sizeof(header)))
+		return false;
+	
+	/* Save all parameters data */
+	for (uint32_t i = 0; i < P_COUNT; i++)
+	{
+		float value = atomic_load(&p->params[i]);
+		if (!stream_write_all(stream, &value, sizeof(value)))
+			return false;
+	}
+	return true;
+}
+
+static bool state_load(const clap_plugin_t *plugin, const clap_istream_t *stream)
+{
+	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
+
+	/* Read the state headers */
+	uint32_t header[3];
+	if (!stream_read_all(stream, header, sizeof(header)))
+		return false;
+	if (header[0] != STATE_MAGIC || header[1] != STATE_VERSION)
+		return false;
+
+	/* Tolerate a version with a higher parameter count */
+	uint32_t count = header[2];
+	if (count > P_COUNT)
+		count = P_COUNT;
+	
+	/* Read all the parameters */
+	for (uint32_t i = 0; i < count; i++)
+	{
+		float value;
+		if (!stream_read_all(stream, &value, sizeof(value)))
+			return false;
+
+		/* Store the parameter value and make it dirty to flush the GUI */
+		value = (float)clamp_param_value(i, value);
+		atomic_store(&p->params[i], value);
+		atomic_store(&p->params_dirty[i], true);
+	}
+
+	/* Request host to flush parameters even if audio thread isn't running */
+	if (p->host_params && p->host_params->request_flush)
+		p->host_params->request_flush(p->host);
+
+	return true;
+}
+
+static const clap_plugin_state_t state_ext =
+{
+	.save = state_save,
+	.load = state_load,
+};
+
 static const clap_plugin_audio_ports_t audio_ports_ext =
 {
 	.count = audio_ports_count,
@@ -82,25 +186,9 @@ static int synth_alocate(const clap_plugin_t *plugin)
 		p->host->get_extension(p->host, CLAP_EXT_TIMER_SUPPORT);
 
 	/* Initializing CLAP parameters */
-	atomic_init(&p->params[P_VOLUME], 1.0f);
-	atomic_init(&p->params[P_WAVE_A], SINE_WAVE);
-	atomic_init(&p->params[P_WAVE_B], SINE_WAVE);
-	atomic_init(&p->params[P_WAVE_C], SINE_WAVE);
-	atomic_init(&p->params[P_DETUNE], 0.0f);
-	atomic_init(&p->params[P_ATTACK], 0.2f);
-	atomic_init(&p->params[P_DECAY], 0.3f);
-	atomic_init(&p->params[P_SUSTAIN], 0.7f);
-	atomic_init(&p->params[P_RELEASE], 0.2f);
-	atomic_init(&p->params[P_CUTOFF], 0.5f);
-	atomic_init(&p->params[P_FILTER_ATTACK], 0.0f);
-	atomic_init(&p->params[P_FILTER_DECAY], 0.0f);
-	atomic_init(&p->params[P_FILTER_SUSTAIN], 0.0f);
-	atomic_init(&p->params[P_FILTER_RELEASE], 0.0f);
-	atomic_init(&p->params[P_FILTER_ENV_ON], 0.0f);
-
-	/* Initializing gestures booleans */
 	for (uint32_t i = 0; i < P_COUNT; i++)
 	{
+		atomic_init(&p->params[i], PARAMS[i].def);
 		atomic_init(&p->gestures_start[i], false);
 		atomic_init(&p->gestures_end[i], false);
 		atomic_init(&p->params_dirty[i], false);
@@ -168,21 +256,6 @@ static int synth_alocate(const clap_plugin_t *plugin)
 	}
 
 	return 0;
-}
-
-/* Clamp the parameter value by its minimum and maximum */
-static double clamp_param_value(clap_id id, double value)
-{
-	const param_desc_t *desc = param_desc_from_id(id);
-	if (!desc) return value;
-	
-	if (value < desc->min) value = desc->min;
-	if (value > desc->max) value = desc->max;
-
-	if (desc->flags & CLAP_PARAM_IS_STEPPED)
-		value = (double)(int)value;
-
-	return value;
 }
 
 /* Process a given CLAP event */
@@ -477,6 +550,7 @@ const void *plugin_get_extension(const clap_plugin_t *plugin, const char *id)
 	if (!strcmp(id, CLAP_EXT_GUI)) return &gui_ext;
 	if (!strcmp(id, CLAP_EXT_POSIX_FD_SUPPORT)) return &posix_fd_support_ext;
 	if (!strcmp(id, CLAP_EXT_TIMER_SUPPORT)) return &timer_support_ext;
+	if (!strcmp(id, CLAP_EXT_STATE)) return &state_ext;
     return NULL;
 }
 
