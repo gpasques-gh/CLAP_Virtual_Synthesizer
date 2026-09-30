@@ -37,7 +37,11 @@ The GUI shows all of the informations about the synth and let the user configure
 - The GUI of the CLAP plugin is currently unfinished, but you can use the parameter view in REAPER to access every parameter graphically, which may be better than anything I could come up with.
 
 \
-![alt text](https://github.com/gpasques-gh/ALSA_raygui_Synthesizer/blob/main/synth.png "GUI screenshot")
+![alt text](https://github.com/gpasques-gh/ALSA_raygui_Synthesizer/blob/main/images/synth_standalone.png "Standalone GUI screenshot")
+![alt text](https://github.com/gpasques-gh/ALSA_raygui_Synthesizer/blob/main/images/plugin_gui.png "Plugin GUI screenshot")
+![alt text](https://github.com/gpasques-gh/ALSA_raygui_Synthesizer/blob/main/images/plugin_reaper.png "REAPER parameters view screenshot")
+
+
 
 # MIDI Input 🎹
 The MIDI input should work with all USB MIDI keyboards, to use the synth with your keyboard just follow these two steps :

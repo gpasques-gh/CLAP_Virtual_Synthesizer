@@ -507,6 +507,7 @@ static void plugin_paint_slider_name(
 }
 
 static void create_waveform_menu(
+	synth_plugin_t *p,
 	menu_t *menu, 
 	int l, int r, 
 	int t, int b, 
@@ -547,7 +548,8 @@ static void create_waveform_menu(
 	menu->entries[SAWTOOTH_WAVE].rec.top += 90;
 	menu->entries[SAWTOOTH_WAVE].rec.bottom += 90;
 
-	menu->selected = menu->entries[0];
+	uint8_t selected_wave = atomic_load(&p->params[param_id]);
+	menu->selected = menu->entries[selected_wave];
 }
 
 /* Create the elements of the GUI, called in gui_create */
@@ -673,15 +675,15 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 
 	create_waveform_menu(
-		&plugin->gui->elements.wave_a,
+		plugin, &plugin->gui->elements.wave_a,
 		24, 106, 166, 202, BLACK, GRAY, P_WAVE_A);
 
 	create_waveform_menu(
-		&plugin->gui->elements.wave_b,
+		plugin, &plugin->gui->elements.wave_b,
 		118, 200, 166, 202, BLACK, GRAY, P_WAVE_B);
 
 	create_waveform_menu(
-		&plugin->gui->elements.wave_c,
+		plugin, &plugin->gui->elements.wave_c,
 		212, 294, 166, 202, BLACK, GRAY, P_WAVE_C);
 	
 	
@@ -821,8 +823,6 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 	/* Draw the piano visualizer */
 	draw_piano_keyboard(plugin);
 	
-	
-
 	/* Painting ADSR sliders */
 	rectangle_t adsr_rec = 
 	{	.left = 12, .right = 306, .top = 12, .bottom = 119,
