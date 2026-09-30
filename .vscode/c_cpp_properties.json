@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/external/",
-                "${workspaceFolder}/include/"
+                "${workspaceFolder}/include/",
+                "${workspaceFolder}/assets/"
             ],
             "defines": ["__LINUX__"],
             "cStandard": "c17",
@@ -17,6 +18,7 @@
             "includePath": [
                 "${workspaceFolder}/external/",
                 "${workspaceFolder}/include/",
+                "${workspaceFolder}/assets/",
                 "${workspaceFolder}/external/libxml/include"
             ],
             "defines": ["__WINDOWS__"],
@@ -29,7 +31,8 @@
             "name": "CLAP_Win32",
             "includePath": [
                 "${workspaceFolder}/external/",
-                "${workspaceFolder}/include/"
+                "${workspaceFolder}/include/",
+                "${workspaceFolder}/assets/"
             ],
             "defines": ["__CLAP__"],
             "cStandard": "c17",
