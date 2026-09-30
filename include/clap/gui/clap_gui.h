@@ -3,7 +3,7 @@
 #ifndef __CLAP_GUI_H__
 #define __CLAP_GUI_H__
 
-#define GUI_WIDTH (572)
+#define GUI_WIDTH (624)
 #define GUI_HEIGHT (300)
 
 #define GRAY 0xC0C0C0
@@ -63,7 +63,7 @@ typedef struct
 {
 	slider_t volume_slider;
 	slider_t adsr_sliders[4];
-	
+	slider_t detune_slider;
 	slider_t cutoff_slider;
 	slider_t filter_adsr_sliders[4];
 	checkbox_t filter_env_on_box;
@@ -95,6 +95,8 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits);
 void plugin_process_mouse_drag(synth_plugin_t *plugin, int x, int y);
 void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y);
 void plugin_process_mouse_release(synth_plugin_t *plugin);
+
+void gui_paint(synth_plugin_t *plugin, bool internal);
 
 #endif /* __CLAP_GUI_H__ */
 #endif /* __CLAP__*/

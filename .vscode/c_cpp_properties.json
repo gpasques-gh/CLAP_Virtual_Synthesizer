@@ -41,7 +41,8 @@
             "name": "CLAP_Linux",
             "includePath": [
                 "${workspaceFolder}/external/",
-                "${workspaceFolder}/include/"
+                "${workspaceFolder}/include/",
+                "${workspaceFolder}/assets/"
             ],
             "defines": ["__CLAP__"],
             "cStandard": "c17",

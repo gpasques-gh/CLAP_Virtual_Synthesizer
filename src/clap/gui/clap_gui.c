@@ -345,6 +345,9 @@ static uint32_t get_param_gui(
 	rectangle_t f_env_on =
 		elements.filter_env_on_box.rec;
 
+	rectangle_t detune =
+		elements.detune_slider.rec_value;
+
 	/* Return the parameter ID from XY position */
 	if (elements.wave_a.entries_on)
 	{
@@ -407,6 +410,8 @@ static uint32_t get_param_gui(
 		return P_CUTOFF;
 	if (IN_REC(x, y, f_env_on))
 		return P_FILTER_ENV_ON;
+	if (IN_REC(x, y, detune))
+		return P_DETUNE;
 
 	/* If we are not on any square, send P_COUNT */
 	return P_COUNT;
@@ -415,19 +420,33 @@ static uint32_t get_param_gui(
 /* Paint a checkbox onto the bitmap */
 static void paint_checkbox(uint32_t *bits, checkbox_t box)
 {
-	rectangle_t inner_rec = 
-	{
-		.left = box.rec.left + 5,
-		.right = box.rec.right - 5,
-		.top = box.rec.top + 5,
-		.bottom = box.rec.bottom - 5,
-		.fill_color = 0xFFFFF,
-		.border_color = 0xFFFFF
-	};
-
 	plugin_paint_rec(bits, box.rec);
 	if (box.param_value)
+	{
+		rectangle_t inner_rec = 
+		{
+			.left = box.rec.left + 5,
+			.right = box.rec.right - 5,
+			.top = box.rec.top + 5,
+			.bottom = box.rec.bottom - 5,
+			.fill_color = WHITE,
+			.border_color = WHITE
+		};
+
 		plugin_paint_rec(bits, inner_rec);
+		uint32_t txt_w = get_text_width("Filter env ON", 10);
+		int txt_x =  box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
+		int txt_y =  box.rec.top - 10;
+		plugin_paint_text(bits, txt_x, txt_y, "Filter env ON", 10, BLACK);
+	}
+	else
+	{
+		uint32_t txt_w = get_text_width("Filter env OFF", 10);
+		int txt_x =  box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
+		int txt_y =  box.rec.top - 10;
+		plugin_paint_text(bits, txt_x, txt_y, "Filter env OFF", 10, BLACK);
+	}
+
 }
 
 /* Get slider rectangle from parameter ID */
@@ -445,6 +464,7 @@ static rectangle_t get_slider_rec(gui_elements_t elements, uint32_t param_id)
 	case P_FILTER_SUSTAIN: return elements.filter_adsr_sliders[2].rec;
 	case P_FILTER_RELEASE: return elements.filter_adsr_sliders[3].rec;
 	case P_CUTOFF: return elements.cutoff_slider.rec;
+	case P_DETUNE: return elements.detune_slider.rec;
 	default: return (rectangle_t){0};
 	}
 }
@@ -544,11 +564,12 @@ void gui_create_elements(synth_plugin_t *plugin)
 	float f_sustain = atomic_load(&plugin->params[P_FILTER_SUSTAIN]);
 	float f_release = atomic_load(&plugin->params[P_FILTER_RELEASE]);
 	float cutoff = atomic_load(&plugin->params[P_CUTOFF]);
+	float detune = atomic_load(&plugin->params[P_DETUNE]);
 	bool f_env_on = atomic_load(&plugin->params[P_FILTER_ENV_ON]);
 
 	/* Attack slider */
 	rectangle_t attack_rec = { 
-		.left = 40, .right = 140, .top = 40, .bottom = 70, 
+		.left = 24, .right = 153, .top = 24, .bottom = 59, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[0].rec = attack_rec;
 	plugin->gui->elements.adsr_sliders[0].rec_value = 
@@ -557,7 +578,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	/* Decay slider */
 	rectangle_t decay_rec = { 
-		.left = 40, .right = 140, .top = 90, .bottom = 120, 
+		.left = 24, .right = 153, .top = 71, .bottom = 106, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[1].rec = decay_rec;
 	plugin->gui->elements.adsr_sliders[1].rec_value = 
@@ -566,7 +587,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	/* Sustain slider */
 	rectangle_t sustain_rec = { 
-		.left = 160, .right = 260, .top = 40, .bottom = 70, 
+		.left = 165, .right = 294, .top = 24, .bottom = 59, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[2].rec = sustain_rec;
 	plugin->gui->elements.adsr_sliders[2].rec_value = 
@@ -575,7 +596,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	/* Release slider */
 	rectangle_t release_rec = { 
-		.left = 160, .right = 260, .top = 90, .bottom = 120, 
+		.left = 165, .right = 294, .top = 71, .bottom = 106, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.adsr_sliders[3].rec = release_rec;
 	plugin->gui->elements.adsr_sliders[3].rec_value = 
@@ -584,7 +605,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	/* Filter Attack slider */
 	rectangle_t f_attack_rec = { 
-		.left = 320, .right = 420, .top = 40, .bottom = 70, 
+		.left = 330, .right = 459, .top = 24, .bottom = 59, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[0].rec = f_attack_rec;
 	plugin->gui->elements.filter_adsr_sliders[0].rec_value = 
@@ -593,7 +614,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	/* Filter Decay slider */
 	rectangle_t f_decay_rec = { 
-		.left = 320, .right = 420, .top = 90, .bottom = 120, 
+		.left = 330, .right = 459, .top = 71, .bottom = 106, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[1].rec = f_decay_rec;
 	plugin->gui->elements.filter_adsr_sliders[1].rec_value = 
@@ -602,7 +623,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	/* Filter Sustain slider */
 	rectangle_t f_sustain_rec = { 
-		.left = 440, .right = 540, .top = 40, .bottom = 70, 
+		.left = 471, .right = 600, .top = 24, .bottom = 59, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[2].rec = f_sustain_rec;
 	plugin->gui->elements.filter_adsr_sliders[2].rec_value = 
@@ -611,7 +632,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	/* Filter Release slider */
 	rectangle_t f_release_rec = { 
-		.left = 440, .right = 540, .top = 90, .bottom = 120, 
+		.left = 471, .right = 600, .top = 71, .bottom = 106, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_adsr_sliders[3].rec = f_release_rec;
 	plugin->gui->elements.filter_adsr_sliders[3].rec_value = 
@@ -620,16 +641,24 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	/* Amplification slider */
 	rectangle_t amp_rec = { 
-		.left = 320, .right = 420, .top = 160, .bottom = 190, 
+		.left = 330, .right = 459, .top = 142, .bottom = 178, 
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.volume_slider.rec = amp_rec;
 	plugin->gui->elements.volume_slider.rec_value = 
 		compute_horizontal_slider_rec(amp_rec, 20, amp, 1.0f);
 	plugin->gui->elements.volume_slider.param_value = amp;
 
+	rectangle_t detune_rec = { 
+		.left = 330, .right = 459, .top = 190, .bottom = 226,
+		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
+	plugin->gui->elements.detune_slider.rec = detune_rec;
+	plugin->gui->elements.detune_slider.rec_value = 
+		compute_horizontal_slider_rec(detune_rec, 20, detune, 5.0f);
+	plugin->gui->elements.detune_slider.param_value = detune;
+
 	/* Cutoff slider */
 	rectangle_t cutoff_rec = { 
-		.left = 440, .right = 540, .top = 160, .bottom = 190, 
+		.left = 471, .right = 600, .top = 142, .bottom = 178,
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.cutoff_slider.rec = cutoff_rec;
 	plugin->gui->elements.cutoff_slider.rec_value = 
@@ -637,7 +666,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 	plugin->gui->elements.cutoff_slider.param_value = cutoff;
 
 	rectangle_t env_on_rec = { 
-		.left = 440, .right = 540, .top = 210, .bottom = 240, 
+		.left = 471, .right = 600, .top = 190, .bottom = 226,
 		.border_color = BLACK, .fill_color = GRAY, .border_width = 1};
 	plugin->gui->elements.filter_env_on_box.rec = env_on_rec;
 	plugin->gui->elements.filter_env_on_box.param_value = f_env_on;
@@ -645,15 +674,15 @@ void gui_create_elements(synth_plugin_t *plugin)
 
 	create_waveform_menu(
 		&plugin->gui->elements.wave_a,
-		40, 100, 180, 210, BLACK, GRAY, P_WAVE_A);
+		24, 106, 166, 202, BLACK, GRAY, P_WAVE_A);
 
 	create_waveform_menu(
 		&plugin->gui->elements.wave_b,
-		120, 180, 180, 210, BLACK, GRAY, P_WAVE_B);
+		118, 200, 166, 202, BLACK, GRAY, P_WAVE_B);
 
 	create_waveform_menu(
 		&plugin->gui->elements.wave_c,
-		200, 260, 180, 210, BLACK, GRAY, P_WAVE_C);
+		212, 294, 166, 202, BLACK, GRAY, P_WAVE_C);
 	
 	
 	/* Load the font from the asset header */
@@ -687,6 +716,7 @@ static void update_sliders(synth_plugin_t *p)
 	float f_decay = atomic_load(&p->params[P_FILTER_DECAY]);
 	float f_sustain = atomic_load(&p->params[P_FILTER_SUSTAIN]);
 	float f_release = atomic_load(&p->params[P_FILTER_RELEASE]);
+	float detune = atomic_load(&p->params[P_DETUNE]);
 	float cutoff = atomic_load(&p->params[P_CUTOFF]);
 
 	/* Update the volume slider */
@@ -704,6 +734,8 @@ static void update_sliders(synth_plugin_t *p)
 	update_slider(&p->gui->elements.filter_adsr_sliders[2], 20, f_sustain, 1.0f);
 	update_slider(&p->gui->elements.filter_adsr_sliders[3], 20, f_release, 2.0f);
 	update_slider(&p->gui->elements.cutoff_slider, 20, cutoff, 1.0f);
+
+	update_slider(&p->gui->elements.detune_slider, 20, detune, 5.0f);
 }
 
 /* Draw the drop down menus (enums) */
@@ -723,46 +755,56 @@ static void draw_waveforms_menu(synth_plugin_t *plugin, uint8_t wave)
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			int text_x = waveforms.entries[i].rec.left + 20;
-			int text_y = waveforms.entries[i].rec.top + 10;
+			uint32_t txt_w = get_text_width(waveforms.entries[i].name, 10);
+			int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+			int txt_y =  waveforms.entries[i].rec.top + 10;
 
 			plugin_paint_rec(plugin->gui->bits, waveforms.entries[i].rec);
 			plugin_paint_text(
 				plugin->gui->bits,
-				text_x, text_y, 
+				txt_x, txt_y, 
 				waveforms.entries[i].name,
 				10, BLACK);
 		}
 	}
 	else 
 	{
-		plugin_paint_rec(plugin->gui->bits, waveforms.base_rec);
-		int text_x = waveforms.base_rec.left + 20;
-		int text_y = waveforms.base_rec.top + 10;
+		uint32_t txt_w = get_text_width(waveforms.selected.name, 10);
+		int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y =  waveforms.base_rec.top + 10;
 
 		plugin_paint_rec(plugin->gui->bits, waveforms.base_rec);
 		plugin_paint_text(
 			plugin->gui->bits,
-			text_x, text_y, 
+			txt_x, txt_y, 
 			waveforms.selected.name,
 			10, BLACK);
 	}
 
 	if (wave == P_WAVE_A)
+	{
+		uint32_t txt_w = get_text_width("Osc A", 10);
+		int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y =  waveforms.base_rec.top - 10;
 		plugin_paint_text(plugin->gui->bits, 
-			waveforms.base_rec.left + 20,
-			waveforms.base_rec.top - 10, 
-			"Osc A", 10, BLACK);
+			txt_x, txt_y, "Osc A", 10, BLACK);
+	}
 	else if (wave == P_WAVE_B)
+	{
+		uint32_t txt_w = get_text_width("Osc B", 10);
+		int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y =  waveforms.base_rec.top - 10;
 		plugin_paint_text(plugin->gui->bits, 
-			waveforms.base_rec.left + 20,
-			waveforms.base_rec.top - 10, 
-			"Osc B", 10, BLACK);
+			txt_x, txt_y, "Osc B", 10, BLACK);
+	}
 	else if (wave == P_WAVE_C)
+	{
+		uint32_t txt_w = get_text_width("Osc C", 10);
+		int txt_x =  waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y =  waveforms.base_rec.top - 10;
 		plugin_paint_text(plugin->gui->bits, 
-			waveforms.base_rec.left + 20,
-			waveforms.base_rec.top - 10, 
-			"Osc C", 10, BLACK);
+			txt_x, txt_y, "Osc C", 10, BLACK);
+	}
 }
 
 void plugin_paint(synth_plugin_t *plugin, uint32_t *bits) 
@@ -779,12 +821,11 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 	/* Draw the piano visualizer */
 	draw_piano_keyboard(plugin);
 	
-	/* Painting amplification slider */
-	plugin_paint_slider_name(bits, plugin->gui->elements.volume_slider, "Volume", 10);
+	
 
 	/* Painting ADSR sliders */
 	rectangle_t adsr_rec = 
-	{	.left = 20, .right = 280, .top = 20, .bottom = 140,
+	{	.left = 12, .right = 306, .top = 12, .bottom = 119,
 		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
 	plugin_paint_rec(bits, adsr_rec);
 	plugin_paint_slider_name(bits, plugin->gui->elements.adsr_sliders[0], "Attack", 10);
@@ -794,21 +835,28 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 
 	/* Painting filter ADSR sliders and cutoff */
 	rectangle_t filter_adsr_rec = 
-	{	.left = 300, .right = 560, .top = 20, .bottom = 140,
+	{	.left = 318, .right = 612, .top = 12, .bottom = 119,
 		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
 	plugin_paint_rec(bits, filter_adsr_rec);
 	plugin_paint_slider_name(bits, plugin->gui->elements.filter_adsr_sliders[0], "Attack", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.filter_adsr_sliders[1], "Decay", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.filter_adsr_sliders[2], "Sustain", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.filter_adsr_sliders[3], "Release", 10);
-	plugin_paint_slider_name(bits, plugin->gui->elements.cutoff_slider, "Cutoff", 10);
 
-	/* Paint Envelope On checkbox */
+
+	/* Miscellanous synthesizer parameters */
+	rectangle_t params_rec = 
+	{	.left = 318, .right = 612, .top = 131, .bottom = 238,
+		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
+	plugin_paint_rec(bits, params_rec);
+	plugin_paint_slider_name(bits, plugin->gui->elements.volume_slider, "Volume", 10);
+	plugin_paint_slider_name(bits, plugin->gui->elements.detune_slider, "Detune", 10);
+	plugin_paint_slider_name(bits, plugin->gui->elements.cutoff_slider, "Cutoff", 10);
 	paint_checkbox(bits, plugin->gui->elements.filter_env_on_box);
 
 	/* Waveforms menus */
 	rectangle_t wave_rec = 
-	{	.left = 20, .right = 280, .top = 160, .bottom = 230,
+	{	.left = 12, .right = 306, .top = 131, .bottom = 238,
  		.border_color = BLACK, .fill_color = WHITE, .border_width = 1};
 	plugin_paint_rec(bits, wave_rec);
 	draw_waveforms_menu(plugin, P_WAVE_A);
@@ -839,7 +887,11 @@ void plugin_process_mouse_drag(synth_plugin_t *plugin, int x, int y)
 		bool is_2_range =
 			id == P_ATTACK || id == P_DECAY || id == P_RELEASE ||
 			id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_RELEASE;
-		new_val *= is_2_range ? 2.0f : 1.0f;
+		
+		if (is_2_range)
+			new_val *= 2.0f;
+		else if (id == P_DETUNE)
+			new_val *= 5.0f;
 
 		atomic_store(&plugin->params[plugin->mouse.drag_param_id], new_val);
 		atomic_store(&plugin->params_dirty[plugin->mouse.drag_param_id], true);
@@ -1087,13 +1139,20 @@ void suggest_title(const clap_plugin_t *plugin, const char *title) { (void)plugi
 
 bool show(const clap_plugin_t *plugin)
 {
-	gui_set_visible((synth_plugin_t *)plugin->plugin_data, true);
+	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
+	gui_set_visible(p, true);
+	if (p->host_timer_support && p->host_timer_support->register_timer && p->timer_id != CLAP_INVALID_ID)
+		p->host_timer_support->register_timer(p->host, 16, &p->timer_id);
 	return true;
 }
 
 bool hide(const clap_plugin_t *plugin)
 {
-	gui_set_visible((synth_plugin_t *)plugin->plugin_data, false);
+	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
+	gui_set_visible(p, false);
+	if (p->host_timer_support && p->host_timer_support->unregister_timer 
+		&& p->timer_id != CLAP_INVALID_ID)
+			p->host_timer_support->unregister_timer(p->host, p->timer_id);
 	return true;
 }
 

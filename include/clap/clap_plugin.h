@@ -56,7 +56,10 @@ typedef struct synth_plugin_s
 	mouse_t mouse;
 	const clap_host_posix_fd_support_t
 		*host_POSIX_support;
-		
+
+	/* Timer support */
+	const clap_host_timer_support_t *host_timer_support;
+	clap_id timer_id;
 } synth_plugin_t;
 
 void process_event(

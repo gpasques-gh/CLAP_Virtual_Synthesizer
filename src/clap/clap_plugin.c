@@ -49,7 +49,7 @@ const clap_plugin_descriptor_t __descriptor =
 /* Free the synthesizer */
 static void synth_free(const clap_plugin_t *plugin)
 {
-	synth_plugin_t *p = (synth_plugin_t *)plugin;
+	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
 	if (!p || !p->synth.voices)
 		return;
 
@@ -78,6 +78,8 @@ static int synth_alocate(const clap_plugin_t *plugin)
 		p->host->get_extension(p->host, CLAP_EXT_PARAMS);
 	p->host_POSIX_support = (const clap_host_posix_fd_support_t *)
 		p->host->get_extension(p->host, CLAP_EXT_POSIX_FD_SUPPORT);
+	p->host_timer_support = (const clap_host_timer_support_t *)
+		p->host->get_extension(p->host, CLAP_EXT_TIMER_SUPPORT);
 
 	/* Initializing CLAP parameters */
 	atomic_init(&p->params[P_VOLUME], 1.0f);
@@ -372,7 +374,8 @@ bool plugin_init(const clap_plugin_t *plugin)
 void plugin_destroy(const clap_plugin_t *plugin) 
 {
 	synth_free(plugin);
-	free((synth_plugin_t *)plugin->plugin_data);
+	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
+	free(p);
 }
 
 /* Activate the plugin at a given sample rate */
@@ -445,6 +448,21 @@ static const clap_plugin_posix_fd_support_t posix_fd_support_ext =
 	.on_fd = posix_on_fd,
 };
 
+static void on_timer( const clap_plugin_t *plugin, clap_id timer_id)
+{
+	synth_plugin_t *p = (synth_plugin_t *)plugin->plugin_data;
+	if (p->gui && timer_id == p->timer_id)
+	{
+		gui_on_POSIX_fd(p);
+		gui_paint(p, true);
+	}
+}
+
+static const clap_plugin_timer_support_t timer_support_ext =
+{
+	.on_timer = on_timer,
+};
+
 /* Get all of the plugin extensions (PARAMS, NOTE_PORTS & AUDIO_PORTS) */
 const void *plugin_get_extension(const clap_plugin_t *plugin, const char *id)
 {
@@ -458,6 +476,7 @@ const void *plugin_get_extension(const clap_plugin_t *plugin, const char *id)
     if (!strcmp(id, CLAP_EXT_AUDIO_PORTS)) return &audio_ports_ext;
 	if (!strcmp(id, CLAP_EXT_GUI)) return &gui_ext;
 	if (!strcmp(id, CLAP_EXT_POSIX_FD_SUPPORT)) return &posix_fd_support_ext;
+	if (!strcmp(id, CLAP_EXT_TIMER_SUPPORT)) return &timer_support_ext;
     return NULL;
 }
 

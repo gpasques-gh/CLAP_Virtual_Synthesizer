@@ -7,7 +7,7 @@
 
 #define INPUTS (SubstructureNotifyMask | ExposureMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | EnterWindowMask | LeaveWindowMask | ButtonMotionMask | KeymapStateMask | FocusChangeMask | PropertyChangeMask )
 
-static void gui_paint(synth_plugin_t *plugin, bool internal)
+void gui_paint(synth_plugin_t *plugin, bool internal)
 {
     if (internal) plugin_paint(plugin, plugin->gui->bits);
     XPutImage(
