@@ -15,7 +15,7 @@ Tested on a Linux Mint Debian Edition machine, a Windows 11 machine and through 
 - Raygui graphical user interface for standalone mode
 - Saving and loading presets configurations XML files
 - Recording the synth output into a WAV file
-- CLAP virtual instrument plugin usable in REAPER (not tested in other DAWs or plugin hosts, but if they offcially support CLAP plugins it should work, let me know if it doesn't)
+- CLAP virtual instrument plugin usable in REAPER (not tested in other DAWs or plugin hosts, but if they officially support CLAP plugins it should work, let me know if it doesn't)
 - It is possible to bundle the CLAP plugin into a VST3 using [clap-wrapper ](https://github.com/free-audio/clap-wrapper) to use it in DAW that does not support CLAP like Ableton Live, it worked for me using and older version of the [VST3 SDK](https://github.com/steinbergmedia/vst3sdk) (3.8.0)
 
 # GUI 🖼️
@@ -33,29 +33,63 @@ The GUI shows all of the informations about the synth and let the user configure
 - Buttons for loading and saving presets into the preset folder
 - Button for recording and stop recording into a WAV file
 - Piano keyboard showing which keys are being pressed
+
+<div align="center">
+<table>
+  <tr>
+    <th align="center">Standalone GUI</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <img alt="Plugin GUI" src="images/synth_standalone.png" width="100%">
+    </td>
+  </tr>
+</table>
+</div>
+
 ## Plugin mode
-- The GUI of the CLAP plugin is currently unfinished, but you can use the parameter view in REAPER to access every parameter graphically, which may be better than anything I could come up with.
-
+- The GUI of the CLAP plugin is incorporating most of the features of the standalone GUI, except for arpeggiator, XML presets saving, WAVE recording and effects.
+- It is also possible to use your DAW parameter view if you don't like the GUI, the REAPER one is fine (and arguably better than my GUI).
 \
-![alt text](https://github.com/gpasques-gh/ALSA_raygui_Synthesizer/blob/main/images/synth_standalone.png "Standalone GUI screenshot")
-![alt text](https://github.com/gpasques-gh/ALSA_raygui_Synthesizer/blob/main/images/plugin_gui.png "Plugin GUI screenshot")
-![alt text](https://github.com/gpasques-gh/ALSA_raygui_Synthesizer/blob/main/images/plugin_reaper.png "REAPER parameters view screenshot")
 
-
+<div align="center">
+<table>
+  <tr>
+    <th align="center">Plugin GUI</th>
+    <th align="center">REAPER parameters view</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <img alt="Plugin GUI" src="images/plugin_gui.png" width="100%">
+    </td>
+    <td align="center">
+      <img alt="REAPER parameters view" src="images/plugin_reaper.png" width="100%">
+    </td>
+  </tr>
+</table>
+</div>
 
 # MIDI Input 🎹
-The MIDI input should work with all USB MIDI keyboards, to use the synth with your keyboard just follow these two steps :
-## Windows
+
+## Standalone mode
+The MIDI input of the standalone program should work with all USB MIDI keyboards, to use the synth with your keyboard just follow these two steps :
+### Windows
 - I did not find a command as simple as `amidi -l` on Linux to list Windows MIDI hardware IDs, so if you want to use MIDI on Windows, just run the synth this way `.\bin\synth -midi 0`. The program should print any available MIDI device and their IDs, then close the program and run it again with the correct ID `.\bin\synth -midi <ID>`.
-## Linux
+### Linux
 - Using the `amidi -l` command, get your MIDI device hardware id (should look something similar to `hw:1,0,0`)
 - Then run the synth : `./bin/synth -midi <hardware id>`
+## Plugin mode
+- The MIDI implementation of the CLAP plugin should work out of the box with any host that officially support the CLAP format.
 
 # Keyboard input ⌨️
+
+## Standalone mode
 - The synthesizer can always be played with a computer keyboard, even when using MIDI mode.
 - The keyboard simulates a piano keyboard, starting from `a` (`q` in AZERTY) to `j`.  
 - The up arrow key move the keys up an octave and the down arrow key move the keys down an octave.
 - This current implementation is more useful for testing than it is for playing, I'm planning on adding a second row of keys in the future.
+## Plugin mode
+- This depends if the computer keyboard input as MIDI is a feature of your host, it works on both REAPER and Ableton Live (with the plugin bundled in a VST3 format).
 
 # Dependencies 💻
 
@@ -78,10 +112,10 @@ The only difference for Windows is that libxml2 is included in the `external` di
 This project use the GCC compiler so you would need to install it, I use the MinGW-64 one from scoop.
   
 # Compilation 🛠️
-To compile the projet as a standalone executable : `make` or `make COMPILE_MODE=STANDALONE`.
-To compile the project as a CLAP plugin : `make COMPILE_MODE=CLAP`.
-Don't forget to add the project directory to the CLAP plugin search path of your DAW.
-Create the `presets/` and `audio/` directories in the base project folder in order to use the presets saving and audio recording functionnalities.
+- To compile the projet as a standalone executable : `make` or `make COMPILE_MODE=STANDALONE`.
+- To compile the project as a CLAP plugin : `make COMPILE_MODE=CLAP`.
+- Don't forget to add the project directory to the CLAP plugin search path of your DAW.
+- Create the `presets/` and `audio/` directories in the base project folder in order to use the presets saving and audio recording functionalities.
   
 # Contribute & feedback
 Don't hesitate to give feedback and contribute to the project!  
