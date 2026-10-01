@@ -1,26 +1,7 @@
-#ifndef __CLAP_PLUGIN_H__
-#define __CLAP_PLUGIN_H__
-
 #ifdef __CLAP__
 
-#ifdef _WIN32
-#include <windows.h>
-
-typedef HANDLE mutex;
-#define mutex_acquire(mutex) WaitForSingleObject(mutex, INFINITE)
-#define mutex_release(mutex) ReleaseMutex(mutex)
-#define mutex_init(mutex) (mutex = CreateMutex(NULL, FALSE, NULL))
-#define mutex_destroy(mutex) CloseHandle(mutex)
-
-#elif defined(__linux__)
-
-#include <pthread.h>
-#define mutex_acquire(mutex) pthread_mutex_lock(&(mutex))
-#define mutex_release(mutex) pthread_mutex_unlock(&(mutex))
-#define mutex_init(mutex) pthread_mutex_init(&(mutex), NULL)
-#define mutex_destroy(mutex) pthread_mutex_destroy(&(mutex))
-
-#endif
+#ifndef __CLAP_PLUGIN_H__
+#define __CLAP_PLUGIN_H__
 
 #include "lib_clap/include/clap/clap.h"
 #include "clap/clap_params.h"
@@ -48,14 +29,13 @@ typedef struct synth_plugin_s
 	_Atomic float params[P_COUNT];
 	atomic_bool params_dirty[P_COUNT];
 	atomic_bool gestures_start[P_COUNT], gestures_end[P_COUNT];
-	_Atomic int atomic_notes[VOICES];
 	const clap_host_params_t *host_params;
 
 	/* Graphical User Interface */
 	clap_gui_t *gui;
 	mouse_t mouse;
-	const clap_host_posix_fd_support_t
-		*host_POSIX_support;
+	const clap_host_posix_fd_support_t *host_POSIX_support;
+	_Atomic int atomic_notes[VOICES];
 
 	/* Timer support */
 	const clap_host_timer_support_t *host_timer_support;
@@ -86,5 +66,5 @@ void plugin_on_main_thread(const clap_plugin_t *plugin);
 const void *plugin_get_extension(
 	const clap_plugin_t *plugin, const char *id);
 
-#endif /* __CLAP__ */
 #endif /* __CLAP_PLUGIN_H__ */
+#endif /* __CLAP__ */

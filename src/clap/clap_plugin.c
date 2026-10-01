@@ -427,7 +427,7 @@ clap_process_status plugin_process(
 		{
 			process_lfo(&p->synth);
 			double sample = process_voices(&p->synth);
-			sample = process_gain(&p->synth, sample, active_voices);
+			sample = process_gain(&p->synth, sample);
 			sample = process_filter(&p->synth, sample);
 			out_l[frame] = (float)sample;
 			out_r[frame] = (float)sample;
