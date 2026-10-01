@@ -231,7 +231,7 @@ void process_lfo(synth_t *synth)
 }
 
 /* Process the gain and low-pass filter onto the sound buffer */
-double process_gain(synth_t *synth, double sample, int active_voices)
+double process_gain(synth_t *synth, double sample)
 {
 	/* No gain if arpeggio*/
 	if (synth->arp)
@@ -239,9 +239,14 @@ double process_gain(synth_t *synth, double sample, int active_voices)
 		return sample;
 	}
 
+	/* Get the sum of the amplification output of each voices */
+	double adsr_output_sum = 0.0f;
+	for (int v = 0; v < VOICES; v++)
+		adsr_output_sum += synth->voices[v].adsr.output;
+
 	/* Gain to stay at the same level despite the number of active voices */
-	double gain = (active_voices > 0)
-					  ? 1.0 / sqrt((double)active_voices)
+	double gain = (adsr_output_sum > 0.0f)
+					  ? 1.0 / sqrt((double)adsr_output_sum)
 					  : 0.0;
 
 	/* Gain processing */
