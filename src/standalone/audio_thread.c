@@ -51,7 +51,7 @@ static void __process_synthesizer(audio_thread_ctx_t *ctx, short buffer[FRAMES])
 	{
 		process_lfo(&ctx->synth);
 		double sample = process_voices(&ctx->synth);
-		// sample = process_gain(&ctx->synth, sample);
+		sample = process_gain(&ctx->synth, sample);
 		sample = process_filter(&ctx->synth, sample);
 		buffer[i] = (short)(sample * 32767.0);
 		if (ctx->distortion_on)
