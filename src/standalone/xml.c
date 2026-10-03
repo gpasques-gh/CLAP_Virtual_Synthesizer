@@ -121,7 +121,7 @@ int save_preset(
 		snprintf(text_element, 1024, "%.2f", synth.filter.cutoff);
 		xmlNewChild(filter_node, NULL, BAD_CAST "cutoff", BAD_CAST text_element);
 		/* Filter envelope ON/OFF */
-		snprintf(text_element, 1024, "%d", synth.filter.env);
+		snprintf(text_element, 1024, "%.2f", synth.filter.env_wet);
 		xmlNewChild(filter_node, NULL, BAD_CAST "envelope_on", BAD_CAST text_element);
 
 		/* Oscillators waveforms */
@@ -506,22 +506,22 @@ int parse_filter(xmlNode *filter_node,
 		{
 			xmlChar *envelope_on = xmlNodeGetContent(child);
 			char *end_ptr = NULL;
-			int env_on_int = strtol((const char *)envelope_on, &end_ptr, 10);
+			float env_amount_float = strtof((const char *)envelope_on, &end_ptr);
 			if (end_ptr == (char *)envelope_on)
 			{
 				fprintf(stderr, "bad envelope value.\n");
 				return 1;
 			}
 
-			if (env_on_int > 1)
+			if (env_amount_float > 1.0f)
 			{
-				env_on_int = 1;
+				env_amount_float = 1.0f;
 			}
-			else if (env_on_int < 0)
+			else if (env_amount_float < 0.0f)
 			{
-				env_on_int = 0;
+				env_amount_float = 0.0f;
 			}
-			synth->filter.env = env_on_int;
+			synth->filter.env_wet = env_amount_float;
 		}
 	}
 	return 0;

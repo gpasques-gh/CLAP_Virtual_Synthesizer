@@ -8,8 +8,7 @@
 
 /* MACROS */
 #define IN_REC(x, y, rec) ((uint32_t)x >= (rec.left) && (uint32_t)x < (rec.right) && (uint32_t)y >= (rec.top) && (uint32_t)y < (rec.bottom))
-#define PARAM_IS_SLIDER(id) (id == P_ATTACK || id == P_DECAY || id == P_SUSTAIN || id == P_RELEASE || id == P_VOLUME || id == P_CUTOFF || id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_SUSTAIN || id == P_FILTER_RELEASE || id == P_DETUNE)
-#define PARAM_IS_CHECKBOX(id) (id == P_FILTER_ENV_ON)
+#define PARAM_IS_SLIDER(id) (id == P_ATTACK || id == P_DECAY || id == P_SUSTAIN || id == P_RELEASE || id == P_VOLUME || id == P_CUTOFF || id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_SUSTAIN || id == P_FILTER_RELEASE || id == P_DETUNE || id == P_FILTER_ENV_WET)
 
 #include "lib_clap/include/clap/clap.h"
 #include "clap/clap_plugin.h"
@@ -337,7 +336,7 @@ static uint32_t get_param_gui(
 
 	/* Filter envelope on checkbox */
 	rectangle_t f_env_on =
-		elements.filter_env_on_box.rec;
+		elements.filter_env_wet_slider.rec_value;
 
 	rectangle_t detune =
 		elements.detune_slider.rec_value;
@@ -403,7 +402,7 @@ static uint32_t get_param_gui(
 	if (IN_REC(x, y, cutoff))
 		return P_CUTOFF;
 	if (IN_REC(x, y, f_env_on))
-		return P_FILTER_ENV_ON;
+		return P_FILTER_ENV_WET;
 	if (IN_REC(x, y, detune))
 		return P_DETUNE;
 
@@ -414,34 +413,34 @@ static uint32_t get_param_gui(
 /* CHECKBOX IMPLEMENTATION */
 
 /* Paint a checkbox onto the bitmap */
-static void paint_checkbox(uint32_t *bits, checkbox_t box)
-{
-	plugin_paint_rec(bits, box.rec);
-	if (box.param_value)
-	{
-		rectangle_t inner_rec =
-			{
-				.left = box.rec.left + 5,
-				.right = box.rec.right - 5,
-				.top = box.rec.top + 5,
-				.bottom = box.rec.bottom - 5,
-				.fill_color = WHITE,
-				.border_color = WHITE};
+// static void paint_checkbox(uint32_t *bits, checkbox_t box)
+// {
+// 	plugin_paint_rec(bits, box.rec);
+// 	if (box.param_value)
+// 	{
+// 		rectangle_t inner_rec =
+// 			{
+// 				.left = box.rec.left + 5,
+// 				.right = box.rec.right - 5,
+// 				.top = box.rec.top + 5,
+// 				.bottom = box.rec.bottom - 5,
+// 				.fill_color = WHITE,
+// 				.border_color = WHITE};
 
-		plugin_paint_rec(bits, inner_rec);
-		uint32_t txt_w = get_text_width("Filter env ON", 10);
-		int txt_x = box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
-		int txt_y = box.rec.top - 10;
-		plugin_paint_text(bits, txt_x, txt_y, "Filter env ON", 10, BLACK);
-	}
-	else
-	{
-		uint32_t txt_w = get_text_width("Filter env OFF", 10);
-		int txt_x = box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
-		int txt_y = box.rec.top - 10;
-		plugin_paint_text(bits, txt_x, txt_y, "Filter env OFF", 10, BLACK);
-	}
-}
+// 		plugin_paint_rec(bits, inner_rec);
+// 		uint32_t txt_w = get_text_width("Filter env ON", 10);
+// 		int txt_x = box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
+// 		int txt_y = box.rec.top - 10;
+// 		plugin_paint_text(bits, txt_x, txt_y, "Filter env ON", 10, BLACK);
+// 	}
+// 	else
+// 	{
+// 		uint32_t txt_w = get_text_width("Filter env OFF", 10);
+// 		int txt_x = box.rec.left + (box.rec.right - box.rec.left) / 2 - txt_w / 2;
+// 		int txt_y = box.rec.top - 10;
+// 		plugin_paint_text(bits, txt_x, txt_y, "Filter env OFF", 10, BLACK);
+// 	}
+// }
 
 /* SLIDERS IMPLEMENTATION */
 
@@ -472,6 +471,8 @@ static rectangle_t get_slider_rec(gui_elements_t elements, uint32_t param_id)
 		return elements.cutoff_slider.rec;
 	case P_DETUNE:
 		return elements.detune_slider.rec;
+	case P_FILTER_ENV_WET:
+		return elements.filter_env_wet_slider.rec;
 	default:
 		return (rectangle_t){0};
 	}
@@ -541,11 +542,13 @@ static void update_sliders(synth_plugin_t *p)
 	float f_decay = atomic_load(&p->params[P_FILTER_DECAY]);
 	float f_sustain = atomic_load(&p->params[P_FILTER_SUSTAIN]);
 	float f_release = atomic_load(&p->params[P_FILTER_RELEASE]);
+	float f_env_wet = atomic_load(&p->params[P_FILTER_ENV_WET]);
 	float detune = atomic_load(&p->params[P_DETUNE]);
 	float cutoff = atomic_load(&p->params[P_CUTOFF]);
 
-	/* Update the volume slider */
+	/* Update synth parameters sliders */
 	update_slider(&p->gui->elements.volume_slider, 20, amp, 1.0f);
+	update_slider(&p->gui->elements.detune_slider, 20, detune, 5.0f);
 
 	/* Update ADSR envelope sliders */
 	update_slider(&p->gui->elements.adsr_sliders[0], 20, attack, 2.0f);
@@ -559,8 +562,7 @@ static void update_sliders(synth_plugin_t *p)
 	update_slider(&p->gui->elements.filter_adsr_sliders[2], 20, f_sustain, 1.0f);
 	update_slider(&p->gui->elements.filter_adsr_sliders[3], 20, f_release, 2.0f);
 	update_slider(&p->gui->elements.cutoff_slider, 20, cutoff, 1.0f);
-
-	update_slider(&p->gui->elements.detune_slider, 20, detune, 5.0f);
+	update_slider(&p->gui->elements.filter_env_wet_slider, 20, f_env_wet, 1.0f);
 }
 
 /* DROPDOWN MENUS IMPLEMENTATION */
@@ -737,9 +739,9 @@ void gui_create_elements(synth_plugin_t *plugin)
 	float f_decay = atomic_load(&plugin->params[P_FILTER_DECAY]);
 	float f_sustain = atomic_load(&plugin->params[P_FILTER_SUSTAIN]);
 	float f_release = atomic_load(&plugin->params[P_FILTER_RELEASE]);
+	float f_env_wet = atomic_load(&plugin->params[P_FILTER_ENV_WET]);
 	float cutoff = atomic_load(&plugin->params[P_CUTOFF]);
 	float detune = atomic_load(&plugin->params[P_DETUNE]);
-	bool f_env_on = atomic_load(&plugin->params[P_FILTER_ENV_ON]);
 
 	/* Attack slider */
 	rectangle_t attack_rec = {
@@ -828,10 +830,12 @@ void gui_create_elements(synth_plugin_t *plugin)
 		compute_horizontal_slider_rec(cutoff_rec, 20, cutoff, 1.0f);
 	plugin->gui->elements.cutoff_slider.param_value = cutoff;
 
-	rectangle_t env_on_rec = {
+	rectangle_t env_wet_rec = {
 		.left = 471, .right = 600, .top = 190, .bottom = 226, .border_color = BLACK, .fill_color = GRAY, .border_width = 1};
-	plugin->gui->elements.filter_env_on_box.rec = env_on_rec;
-	plugin->gui->elements.filter_env_on_box.param_value = f_env_on;
+	plugin->gui->elements.filter_env_wet_slider.rec = env_wet_rec;
+	plugin->gui->elements.filter_env_wet_slider.rec_value =
+		compute_horizontal_slider_rec(env_wet_rec, 20, f_env_wet, 1.0f);
+	plugin->gui->elements.filter_env_wet_slider.param_value = f_env_wet;
 
 	create_waveform_menu(
 		plugin, &plugin->gui->elements.wave_a,
@@ -888,7 +892,7 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 	plugin_paint_slider_name(bits, plugin->gui->elements.volume_slider, "Volume", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.detune_slider, "Detune", 10);
 	plugin_paint_slider_name(bits, plugin->gui->elements.cutoff_slider, "Cutoff", 10);
-	paint_checkbox(bits, plugin->gui->elements.filter_env_on_box);
+	plugin_paint_slider_name(bits, plugin->gui->elements.filter_env_wet_slider, "Filter envelope amount", 10);
 
 	/* Waveforms menus */
 	rectangle_t wave_rec =
@@ -954,14 +958,6 @@ void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y)
 			plugin->mouse.mouse_drag_og_y = y;
 			plugin->mouse.drag_param_og_val = atomic_load(&plugin->params[plugin->mouse.drag_param_id]);
 			atomic_store(&plugin->gestures_start[plugin->mouse.drag_param_id], true);
-		}
-		else if (PARAM_IS_CHECKBOX(param_id))
-		{
-			plugin->mouse.mouse_dragging = false;
-			bool param = atomic_load(&plugin->params[param_id]);
-			atomic_store(&plugin->params_dirty[param_id], true);
-			atomic_store(&plugin->params[param_id], !param);
-			plugin->gui->elements.filter_env_on_box.param_value = !param;
 		}
 
 		if (plugin->host_params && plugin->host_params->request_flush)

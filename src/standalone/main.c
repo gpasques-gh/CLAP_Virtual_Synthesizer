@@ -1,11 +1,16 @@
 #ifndef __CLAP__
 
+#if !defined(__WINDOWS__) && !defined(__LINUX__)
+#error "Unsupported OS."
+#endif
+
+#ifndef __NO_GUI__
 #ifdef __WINDOWS__
 #include "standalone/win_defs.h"
 #endif
-
 #define RAYGUI_IMPLEMENTATION
 #include "lib_raygui/src/raygui.h"
+#endif
 
 #ifdef __WINDOWS__
 #include <windows.h>
@@ -50,14 +55,13 @@ typedef struct tagBITMAPINFOHEADER
 #include "core/effects.h"
 
 #include "standalone/audio_thread.h"
+#include "standalone/midi.h"
+
+#ifndef __NO_GUI__
 #include "standalone/xml.h"
 #include "standalone/interface.h"
 #include "standalone/keyboard.h"
 #include "standalone/record.h"
-#include "standalone/midi.h"
-
-#if !defined(__WINDOWS__) && !defined(__LINUX__)
-#error "Unsupported OS."
 #endif
 
 /* Prints the usage of the CLI arguments into the error output */
@@ -103,16 +107,16 @@ int main(int argc, char **argv)
 	int osc_lfo = SINE_WAVE;
 
 	/* ADSR envelope parameters */
-	float attack = 0.2;
-	float decay = 0.3;
-	float sustain = 0.7;
-	float release = 0.2;
+	float attack = 0.2f;
+	float decay = 0.3f;
+	float sustain = 0.7f;
+	float release = 0.2f;
 
 	/* Filter ADSR envelope parameters */
-	float filter_attack = 0.0;
-	float filter_decay = 0.3;
-	float filter_sustain = 0.0;
-	float filter_release = 0.2;
+	float filter_attack = 0.0f;
+	float filter_decay = 0.3f;
+	float filter_sustain = 0.0f;
+	float filter_release = 0.2f;
 
 	/* Filter ADSR envelope */
 	adsr_t filter_adsr =
@@ -127,17 +131,17 @@ int main(int argc, char **argv)
 	/* Low-pass filter */
 	lp_filter_t filter =
 		{
-			.cutoff = 0.5,
-			.prev_input = 0.0,
-			.prev_output = 0.0,
-			.adsr = filter_adsr,
-			.env = false};
+			.cutoff = 0.5f,
+			.prev_input = 0.0f,
+			.prev_output = 0.0f,
+			.env_wet = 0.5f,
+			.adsr = filter_adsr};
 
 	/* Low Frequency Oscillator oscillator */
 	osc_t lfo_osc =
 		{
-			.freq = 0.5,
-			.phase = 0.0,
+			.freq = 0.5f,
+			.phase = 0.0f,
 			.wave = osc_lfo};
 
 	/* Low Frequency Oscillator */
@@ -151,13 +155,13 @@ int main(int argc, char **argv)
 		{
 			.voices = malloc(sizeof(voice_t) * VOICES),
 			.amp = DEFAULT_AMPLITUDE,
-			.detune = 0.0,
+			.detune = 0.0f,
 			.filter = filter,
 			.lfo = lfo,
 			.arp = false,
 			.active_arp = 0,
-			.active_arp_float = 1.0,
-			.bpm = 150.0};
+			.active_arp_float = 1.0f,
+			.bpm = 150.0f};
 
 	if (synth.voices == NULL)
 	{
@@ -389,6 +393,8 @@ int main(int argc, char **argv)
 		&audio_thread_proc,
 		&ctx);
 #endif
+
+#ifndef __NO_GUI__
 	/* WAVE recording variables */
 	char audio_filename[1024] = "\0";
 	bool recording = false;
@@ -465,7 +471,7 @@ int main(int argc, char **argv)
 		/* ADSR envelope GUI */
 		render_adsr(&attack, &decay, &sustain, &release);
 		/* Filter ADSR envelope GUI */
-		render_filter_adsr(&filter_attack, &filter_decay, &filter_sustain, &filter_release);
+		render_filter_adsr(synth_ptr);
 		/* Oscillators waveforms selection GUI */
 		render_osc_waveforms(
 			&wave_a, &wave_b, &wave_c,
@@ -511,7 +517,6 @@ int main(int argc, char **argv)
 
 		update_synth_oscillators(synth_ptr, wave_a, wave_b, wave_c);
 		update_synth_envelope(synth_ptr, attack, decay, sustain, release);
-		update_filter_params(synth_ptr, synth_ptr->filter.cutoff, filter_attack, filter_decay, filter_sustain, filter_release, synth_ptr->filter.env);
 
 		/* Keyboard visualizer rendering */
 
@@ -563,6 +568,12 @@ int main(int argc, char **argv)
 		fwrite(&ctx.wave_header, 1, sizeof(ctx.wave_header), ctx.recording_file);
 		close_wav_file(ctx.recording_file);
 	}
+#else
+	/* If no GUI, simple while loop to let the audio thread running */
+	while (1)
+	{
+	}
+#endif /* __NO_GUI__*/
 
 #ifdef __WINDOWS__
 	/* Close the MIDI interface */

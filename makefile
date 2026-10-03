@@ -19,6 +19,7 @@ RAYLIB_LIB = $(EXTERNAL_DIR)/lib_raylib/src/libraylib.a
 # Files
 CORE_SRCS = $(wildcard $(SRC_DIR)/core/*.c)
 STANDALONE_SRCS = $(wildcard $(SRC_DIR)/standalone/*.c)
+STANDALONE_NO_GUI_SRCS = $(SRC_DIR)/standalone/midi.c $(SRC_DIR)/standalone/audio_thread.c $(SRC_DIR)/standalone/main.c
 CLAP_SRCS = $(wildcard $(SRC_DIR)/clap/*.c) $(wildcard $(SRC_DIR)/clap/gui/*.c)
 SRCS =
 
@@ -30,7 +31,7 @@ else
 endif
 
 # Common flags
-CFLAGS = -Wall -Wextra -O2 -I$(INC_DIR) -I$(EXTERNAL_DIR)/ -I$(ASSETS_DIR) -MMD -MP
+CFLAGS = -Wall -Wextra -O2 -I$(INC_DIR) -MMD -MP
 LDFLAGS =
 
 # OS specific flags
@@ -47,7 +48,7 @@ endif
 COMPILE_MODE=STANDALONE
 ifeq ($(COMPILE_MODE),CLAP)
 	TARGET := $(TARGET).clap
-	CFLAGS += -D__CLAP__ -fPIC
+	CFLAGS += -D__CLAP__ -fPIC -I$(EXTERNAL_DIR)/ -I$(ASSETS_DIR)
 	LDFLAGS += -shared
 	SRCS = $(CORE_SRCS) $(CLAP_SRCS)
 
@@ -61,13 +62,25 @@ ifeq ($(COMPILE_MODE),CLAP)
 	endif
 else ifeq ($(DETECTED_OS),Windows)
 	TARGET := $(TARGET).exe
-	CFLAGS += -D_WIN32_WINNT=0x0601 -D__WINDOWS__ -I$(EXTERNAL_DIR)/ -I$(EXTERNAL_DIR)/libxml/include/ -I$(EXTERNAL_DIR)/lib_raylib/src/ -I$(EXTERNAL_DIR)/lib_raygui/src/
-	LDFLAGS += -L$(EXTERNAL_DIR)/lib_raylib/src/ -lraylib -L$(EXTERNAL_DIR)/libxml/lib/ -lxml2 -lm -lksuser -lwinmm -lgdi32 -lopengl32 -lole32 -luuid -lshell32 -lws2_32
-	SRCS = $(CORE_SRCS) $(STANDALONE_SRCS)
+	ifeq ($(COMPILE_MODE),NO_GUI)
+		CFLAGS += -D_WIN32_WINNNT=0x0601 -D__WINDOWS__ -D__NO_GUI__
+		LDFLAGS += -lm -lksuser -lwinmm -lole32 -luuid -lshell32 -lws2_32
+		SRCS = $(CORE_SRCS) $(STANDALONE_NO_GUI_SRCS)
+	else
+		CFLAGS += -D_WIN32_WINNT=0x0601 -D__WINDOWS__ -I$(EXTERNAL_DIR)/ -I$(EXTERNAL_DIR)/libxml/include/ -I$(EXTERNAL_DIR)/lib_raylib/src/ -I$(EXTERNAL_DIR)/lib_raygui/src/
+		LDFLAGS += -L$(EXTERNAL_DIR)/lib_raylib/src/ -lraylib -L$(EXTERNAL_DIR)/libxml/lib/ -lxml2 -lm -lksuser -lwinmm -lgdi32 -lopengl32 -lole32 -luuid -lshell32 -lws2_32
+		SRCS = $(CORE_SRCS) $(STANDALONE_SRCS)
+	endif 
 else ifeq ($(DETECTED_OS),Linux)
-	CFLAGS += -I/usr/include/libxml2 -D__LINUX__ -I$(EXTERNAL_DIR)/lib_raylib/src/ -I$(EXTERNAL_DIR)/lib_raygui/src/
-	LDFLAGS += -lasound -lm -lraylib -lxml2 -lX11 -lpthread
-	SRCS = $(CORE_SRCS) $(STANDALONE_SRCS)
+	ifeq ($(COMPILE_MODE),NO_GUI)
+		CFLAGS += -D__LINUX__ -D__NO_GUI__
+		LDFLAGS += -lasound -lm -lpthread
+		SRCS = $(CORE_SRCS) $(STANDALONE_NO_GUI_SRCS)
+	else
+		CFLAGS += -I/usr/include/libxml2 -D__LINUX__ -I$(EXTERNAL_DIR)/ -I$(EXTERNAL_DIR)/lib_raylib/src/ -I$(EXTERNAL_DIR)/lib_raygui/src/
+		LDFLAGS += -lasound -lm -lraylib -lxml2 -lX11 -lpthread
+		SRCS = $(CORE_SRCS) $(STANDALONE_SRCS)
+	endif 
 else ifeq ($(DETECTED_OS),Darwin)
 	CFLAGS += -I/usr/local/include/libxml2 -I/opt/homebrew/include/libxml2 -D__MACOS__
 	LDFLAGS += -lm -lraylib -lxml2

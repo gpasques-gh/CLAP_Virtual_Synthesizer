@@ -2,7 +2,7 @@
 #define DEFS_H
 
 #ifndef __CLAP__
-#if !defined(__NO_RL__)
+#if !defined(__NO_RL__) && !defined(__NO_GUI__)
 #include "lib_raylib/src/raylib.h"
 #endif /* NO RAYLIB */
 #endif /* __CLAP__ */
