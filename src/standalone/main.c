@@ -1,11 +1,16 @@
 #ifndef __CLAP__
 
+#if !defined(__WINDOWS__) && !defined(__LINUX__)
+#error "Unsupported OS."
+#endif
+
+#ifndef __NO_GUI__
 #ifdef __WINDOWS__
 #include "standalone/win_defs.h"
 #endif
-
 #define RAYGUI_IMPLEMENTATION
 #include "lib_raygui/src/raygui.h"
+#endif
 
 #ifdef __WINDOWS__
 #include <windows.h>
@@ -50,14 +55,13 @@ typedef struct tagBITMAPINFOHEADER
 #include "core/effects.h"
 
 #include "standalone/audio_thread.h"
+#include "standalone/midi.h"
+
+#ifndef __NO_GUI__
 #include "standalone/xml.h"
 #include "standalone/interface.h"
 #include "standalone/keyboard.h"
 #include "standalone/record.h"
-#include "standalone/midi.h"
-
-#if !defined(__WINDOWS__) && !defined(__LINUX__)
-#error "Unsupported OS."
 #endif
 
 /* Prints the usage of the CLI arguments into the error output */
@@ -389,6 +393,8 @@ int main(int argc, char **argv)
 		&audio_thread_proc,
 		&ctx);
 #endif
+
+#ifndef __NO_GUI__
 	/* WAVE recording variables */
 	char audio_filename[1024] = "\0";
 	bool recording = false;
@@ -554,8 +560,14 @@ int main(int argc, char **argv)
 
 	CloseWindow();
 
+#else
+	/* If no GUI, simple while loop to let the audio thread running */
+	while (1)
+	{
+	}
+#endif /* __NO_GUI__*/
 	/* If we quit the application during recording, change WAV header and close WAV file */
-	if (ctx.recording_file != NULL && recording)
+	if (ctx.recording_file != NULL)
 	{
 		ctx.wave_header.sub2_size = FRAMES * ctx.fwrite_count * (unsigned int)ctx.wave_header.num_channels * (unsigned int)ctx.wave_header.bits_per_sample / 8;
 		ctx.wave_header.chunk_size = (unsigned int)ctx.wave_header.sub2_size + 36;
@@ -563,7 +575,6 @@ int main(int argc, char **argv)
 		fwrite(&ctx.wave_header, 1, sizeof(ctx.wave_header), ctx.recording_file);
 		close_wav_file(ctx.recording_file);
 	}
-
 #ifdef __WINDOWS__
 	/* Close the MIDI interface */
 	if (midi_valid)
