@@ -560,14 +560,8 @@ int main(int argc, char **argv)
 
 	CloseWindow();
 
-#else
-	/* If no GUI, simple while loop to let the audio thread running */
-	while (1)
-	{
-	}
-#endif /* __NO_GUI__*/
 	/* If we quit the application during recording, change WAV header and close WAV file */
-	if (ctx.recording_file != NULL)
+	if (ctx.recording_file != NULL && recording)
 	{
 		ctx.wave_header.sub2_size = FRAMES * ctx.fwrite_count * (unsigned int)ctx.wave_header.num_channels * (unsigned int)ctx.wave_header.bits_per_sample / 8;
 		ctx.wave_header.chunk_size = (unsigned int)ctx.wave_header.sub2_size + 36;
@@ -575,6 +569,13 @@ int main(int argc, char **argv)
 		fwrite(&ctx.wave_header, 1, sizeof(ctx.wave_header), ctx.recording_file);
 		close_wav_file(ctx.recording_file);
 	}
+#else
+	/* If no GUI, simple while loop to let the audio thread running */
+	while (1)
+	{
+	}
+#endif /* __NO_GUI__*/
+
 #ifdef __WINDOWS__
 	/* Close the MIDI interface */
 	if (midi_valid)

@@ -19,7 +19,7 @@ RAYLIB_LIB = $(EXTERNAL_DIR)/lib_raylib/src/libraylib.a
 # Files
 CORE_SRCS = $(wildcard $(SRC_DIR)/core/*.c)
 STANDALONE_SRCS = $(wildcard $(SRC_DIR)/standalone/*.c)
-STANDALONE_NO_GUI_SRCS = $(SRC_DIR)/standalone/midi.c $(SRC_DIR)/standalone/audio_thread.c $(SRC_DIR)/standalone/main.c $(SRC_DIR)/standalone/record.c
+STANDALONE_NO_GUI_SRCS = $(SRC_DIR)/standalone/midi.c $(SRC_DIR)/standalone/audio_thread.c $(SRC_DIR)/standalone/main.c
 CLAP_SRCS = $(wildcard $(SRC_DIR)/clap/*.c) $(wildcard $(SRC_DIR)/clap/gui/*.c)
 SRCS =
 
@@ -64,7 +64,7 @@ else ifeq ($(DETECTED_OS),Windows)
 	TARGET := $(TARGET).exe
 	ifeq ($(COMPILE_MODE),NO_GUI)
 		CFLAGS += -D_WIN32_WINNNT=0x0601 -D__WINDOWS__ -D__NO_GUI__
-		LDFLAGS += -lm -lksuser -lwinmm -lgdi32 -lopengl32 -lole32 -luuid -lshell32 -lws2_32
+		LDFLAGS += -lm -lksuser -lwinmm -lole32 -luuid -lshell32 -lws2_32
 		SRCS = $(CORE_SRCS) $(STANDALONE_NO_GUI_SRCS)
 	else
 		CFLAGS += -D_WIN32_WINNT=0x0601 -D__WINDOWS__ -I$(EXTERNAL_DIR)/ -I$(EXTERNAL_DIR)/libxml/include/ -I$(EXTERNAL_DIR)/lib_raylib/src/ -I$(EXTERNAL_DIR)/lib_raygui/src/

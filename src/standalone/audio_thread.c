@@ -8,6 +8,7 @@
 #include "standalone/audio_thread.h"
 #include "standalone/midi.h"
 
+#ifndef __NO_GUI__
 /* Handle the recording of the WAVE file */
 static void __recording_handling(audio_thread_ctx_t *ctx, short buffer[FRAMES])
 {
@@ -37,6 +38,7 @@ static void __recording_handling(audio_thread_ctx_t *ctx, short buffer[FRAMES])
 		ctx->fwrite_count = 0;
 	}
 }
+#endif
 
 /* Process the synthesizer sound data into a buffer */
 static void __process_synthesizer(audio_thread_ctx_t *ctx, short buffer[FRAMES])
@@ -137,8 +139,9 @@ DWORD WINAPI audio_thread_proc(LPVOID param)
 
 		/* Increment the current buffer */
 		ctx->current_buffer = (buf_idx + 1) % NUM_BUFFERS;
-
+#ifndef __NO_GUI__
 		__recording_handling(ctx, local_buf);
+#endif
 	}
 
 	timeEndPeriod(1);
@@ -187,9 +190,9 @@ void *audio_thread_proc(void *param)
 			fprintf(stderr, "ALSA write error: %s\n", snd_strerror(err));
 			snd_pcm_prepare(ctx->audio_out);
 		}
-
-		/* Start the recording process */
+#ifndef __NO_GUI__
 		__recording_handling(ctx, ctx->buffer);
+#endif
 	}
 
 	return 0;
