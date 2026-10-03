@@ -7,6 +7,7 @@
 
 static int global_open_gui_count = 0;
 
+/* Paint the GUI */
 void gui_paint(synth_plugin_t *plugin, bool internal)
 {
 	if (internal)
@@ -14,6 +15,7 @@ void gui_paint(synth_plugin_t *plugin, bool internal)
 	RedrawWindow(plugin->gui->window, 0, 0, RDW_INVALIDATE);
 }
 
+/* Window procedure callback */
 LRESULT CALLBACK gui_window_procedure(
 	HWND window,
 	UINT message,
@@ -22,7 +24,6 @@ LRESULT CALLBACK gui_window_procedure(
 {
 	synth_plugin_t *plugin =
 		(synth_plugin_t *)GetWindowLongPtr(window, 0);
-
 	if (!plugin)
 		return DefWindowProc(window, message, wparam, lparam);
 
@@ -47,18 +48,18 @@ LRESULT CALLBACK gui_window_procedure(
 		EndPaint(window, &paint);
 		break;
 	}
-	case WM_MOUSEMOVE:
+	case WM_MOUSEMOVE: /* Mouse move for dragging */
 	{
 		plugin_process_mouse_drag(plugin, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 		gui_paint(plugin, true);
 		break;
 	}
-	case WM_LBUTTONDOWN:
+	case WM_LBUTTONDOWN: /* Mouse click */
 		SetCapture(window);
 		plugin_process_mouse_press(plugin, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 		gui_paint(plugin, true);
 		break;
-	case WM_LBUTTONUP:
+	case WM_LBUTTONUP: /* Mouse release */
 		ReleaseCapture();
 		plugin_process_mouse_release(plugin);
 		gui_paint(plugin, true);
@@ -70,9 +71,12 @@ LRESULT CALLBACK gui_window_procedure(
 	return 0;
 }
 
+/* Win32 window alocating function */
 void gui_create(synth_plugin_t *plugin)
 {
 	plugin->gui = (clap_gui_t *)calloc(1, sizeof(clap_gui_t));
+	if (!plugin->gui)
+		return;
 
 	gui_create_elements(plugin);
 
@@ -90,11 +94,16 @@ void gui_create(synth_plugin_t *plugin)
 	global_open_gui_count++;
 
 	plugin->gui->window = CreateWindow(__descriptor.id, __descriptor.name, WS_CHILDWINDOW | WS_CLIPSIBLINGS, CW_USEDEFAULT, 0, GUI_WIDTH, GUI_HEIGHT, GetDesktopWindow(), NULL, NULL, NULL);
+	if (!plugin->gui->window)
+		return;
 	plugin->gui->bits = (uint32_t *)calloc(1, GUI_WIDTH * GUI_HEIGHT * 4);
+	if (!plugin->gui->bits)
+		return;
 	SetWindowLongPtr(plugin->gui->window, 0, (LONG_PTR)plugin);
 	plugin_paint(plugin, plugin->gui->bits);
 }
 
+/* Win32 windows destory function */
 void gui_destroy(synth_plugin_t *plugin)
 {
 	DestroyWindow(plugin->gui->window);

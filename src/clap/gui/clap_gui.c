@@ -22,6 +22,25 @@
 
 #include "defs.h"
 
+/* Paint a rectangle to the bitmap */
+static void plugin_paint_rec(uint32_t *bits, rectangle_t rec)
+{
+	for (uint32_t y = rec.top; y < rec.bottom; y++)
+	{
+		for (uint32_t x = rec.left; x < rec.right; x++)
+		{
+			bits[y * GUI_WIDTH + x] = (y <= rec.top + rec.border_width - 1 ||
+									   y >= rec.bottom - rec.border_width ||
+									   x <= rec.left + rec.border_width - 1 ||
+									   x >= rec.right - rec.border_width)
+										  ? rec.border_color
+										  : rec.fill_color;
+		}
+	}
+}
+
+/* FONT AND TEXT */
+
 /* Font structure */
 typedef struct
 {
@@ -77,6 +96,7 @@ static void blend_pixel(
 	*dst = ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
 
+/* Get the width of a text written with the font */
 static uint32_t get_text_width(const char *text, float px_size)
 {
 	if (!__font.loaded || !text)
@@ -160,80 +180,7 @@ static void plugin_paint_text(
 	}
 }
 
-/* Paint a rectangle to the bitmap */
-static void plugin_paint_rec(uint32_t *bits, rectangle_t rec)
-{
-	for (uint32_t y = rec.top; y < rec.bottom; y++)
-	{
-		for (uint32_t x = rec.left; x < rec.right; x++)
-		{
-			bits[y * GUI_WIDTH + x] = (y <= rec.top + rec.border_width - 1 ||
-									   y >= rec.bottom - rec.border_width ||
-									   x <= rec.left + rec.border_width - 1 ||
-									   x >= rec.right - rec.border_width)
-										  ? rec.border_color
-										  : rec.fill_color;
-		}
-	}
-}
-
 /* PIANO VISUALIZER*/
-
-/* Render the white keys onto the bitmap */
-static void render_white_keys(uint32_t *bits)
-{
-	for (int i = 0; i < WHITE_KEYS; i++)
-	{
-		rectangle_t key =
-			{
-				.left = (GUI_WIDTH / WHITE_KEYS) * i,
-				.right = (GUI_WIDTH / WHITE_KEYS) * i + (GUI_WIDTH / WHITE_KEYS),
-				.top = GUI_HEIGHT - GUI_HEIGHT / 6,
-				.bottom = GUI_HEIGHT,
-				.border_color = BLACK,
-				.fill_color = WHITE,
-				.border_width = 1};
-		plugin_paint_rec(bits, key);
-	}
-}
-
-/* Render the black keys onto the bitmap */
-static void render_black_keys(uint32_t *bits)
-{
-	int black_keys_pattern[] =
-		{1, 1, 0, 1, 1, 1, 0, 0};
-	int white_key_idx = 0;
-
-	for (int octave = 0; octave <= (WHITE_KEYS / 7); octave++)
-	{
-		for (int i = 0; i < 7; i++)
-		{
-			if (black_keys_pattern[i])
-			{
-				int x = ((white_key_idx + 1) *
-							 (GUI_WIDTH / WHITE_KEYS) -
-						 (GUI_WIDTH / WHITE_KEYS / 4));
-				rectangle_t key =
-					{
-						.left = x,
-						.right = x + (GUI_WIDTH / WHITE_KEYS / 2),
-						.top = (GUI_HEIGHT - GUI_HEIGHT / 6),
-						.bottom = ((GUI_HEIGHT - GUI_HEIGHT / 6) + GUI_HEIGHT / 10),
-						.border_color = BLACK,
-						.fill_color = BLACK,
-						.border_width = 1};
-				plugin_paint_rec(bits, key);
-			}
-
-			white_key_idx++;
-			if (white_key_idx >= WHITE_KEYS)
-				break;
-		}
-
-		if (white_key_idx >= WHITE_KEYS)
-			break;
-	}
-}
 
 /* Render a key onto the bitmap with the given MIDI note */
 /* TODO: fix integer overflow for notes bigger than 127 */
@@ -284,7 +231,22 @@ int is_black_key(int midi_note)
 /* Paint the piano keyboard to the bitmap */
 static void draw_piano_keyboard(synth_plugin_t *plugin)
 {
-	render_white_keys(plugin->gui->bits);
+	/* Render the white keys */
+	for (int i = 0; i < WHITE_KEYS; i++)
+	{
+		rectangle_t key =
+			{
+				.left = (GUI_WIDTH / WHITE_KEYS) * i,
+				.right = (GUI_WIDTH / WHITE_KEYS) * i + (GUI_WIDTH / WHITE_KEYS),
+				.top = GUI_HEIGHT - GUI_HEIGHT / 6,
+				.bottom = GUI_HEIGHT,
+				.border_color = BLACK,
+				.fill_color = WHITE,
+				.border_width = 1};
+		plugin_paint_rec(plugin->gui->bits, key);
+	}
+
+	/* Render the pressed whites keys */
 	for (int v = 0; v < VOICES; v++)
 	{
 		int note = atomic_load(&plugin->atomic_notes[v]);
@@ -292,7 +254,42 @@ static void draw_piano_keyboard(synth_plugin_t *plugin)
 			render_key(plugin->gui->bits, note);
 	}
 
-	render_black_keys(plugin->gui->bits);
+	/* Render the black keys */
+	int black_keys_pattern[] =
+		{1, 1, 0, 1, 1, 1, 0, 0};
+	int white_key_idx = 0;
+
+	for (int octave = 0; octave <= (WHITE_KEYS / 7); octave++)
+	{
+		for (int i = 0; i < 7; i++)
+		{
+			if (black_keys_pattern[i])
+			{
+				int x = ((white_key_idx + 1) *
+							 (GUI_WIDTH / WHITE_KEYS) -
+						 (GUI_WIDTH / WHITE_KEYS / 4));
+				rectangle_t key =
+					{
+						.left = x,
+						.right = x + (GUI_WIDTH / WHITE_KEYS / 2),
+						.top = (GUI_HEIGHT - GUI_HEIGHT / 6),
+						.bottom = ((GUI_HEIGHT - GUI_HEIGHT / 6) + GUI_HEIGHT / 10),
+						.border_color = BLACK,
+						.fill_color = BLACK,
+						.border_width = 1};
+				plugin_paint_rec(plugin->gui->bits, key);
+			}
+
+			white_key_idx++;
+			if (white_key_idx >= WHITE_KEYS)
+				break;
+		}
+
+		if (white_key_idx >= WHITE_KEYS)
+			break;
+	}
+
+	/* Render the pressed black keys */
 	for (int v = 0; v < VOICES; v++)
 	{
 		int note = atomic_load(&plugin->atomic_notes[v]);
@@ -300,6 +297,8 @@ static void draw_piano_keyboard(synth_plugin_t *plugin)
 			render_key(plugin->gui->bits, note);
 	}
 }
+
+/* PARAMETERS */
 
 /* Send which param corresponds to a XY pos on the GUI */
 static uint32_t get_param_gui(
@@ -412,6 +411,8 @@ static uint32_t get_param_gui(
 	return P_COUNT;
 }
 
+/* CHECKBOX IMPLEMENTATION */
+
 /* Paint a checkbox onto the bitmap */
 static void paint_checkbox(uint32_t *bits, checkbox_t box)
 {
@@ -441,6 +442,8 @@ static void paint_checkbox(uint32_t *bits, checkbox_t box)
 		plugin_paint_text(bits, txt_x, txt_y, "Filter env OFF", 10, BLACK);
 	}
 }
+
+/* SLIDERS IMPLEMENTATION */
 
 /* Get slider rectangle from parameter ID */
 static rectangle_t get_slider_rec(gui_elements_t elements, uint32_t param_id)
@@ -473,8 +476,6 @@ static rectangle_t get_slider_rec(gui_elements_t elements, uint32_t param_id)
 		return (rectangle_t){0};
 	}
 }
-
-/* SLIDERS IMPLEMENTATION */
 
 /* Compute the horizontal slider cursor rectangle position */
 static rectangle_t compute_horizontal_slider_rec(
@@ -513,6 +514,58 @@ static void plugin_paint_slider_name(
 	plugin_paint_rec(bits, slider.rec_value);
 }
 
+/* Update slider position with the new  parameter data */
+static void update_slider(slider_t *slider, uint32_t width, float new_val, float val_max)
+{
+	if (slider->param_value != new_val)
+	{
+		slider->param_value = new_val;
+		slider->rec_value =
+			compute_horizontal_slider_rec(
+				slider->rec, width, new_val, val_max);
+	}
+}
+
+/* Update slider position with the parameter data */
+/* Updates even if the data is changed from
+the parameter view of the host and not the GUI view*/
+static void update_sliders(synth_plugin_t *p)
+{
+	/* Get the new data*/
+	float amp = atomic_load(&p->params[P_VOLUME]);
+	float attack = atomic_load(&p->params[P_ATTACK]);
+	float decay = atomic_load(&p->params[P_DECAY]);
+	float sustain = atomic_load(&p->params[P_SUSTAIN]);
+	float release = atomic_load(&p->params[P_RELEASE]);
+	float f_attack = atomic_load(&p->params[P_FILTER_ATTACK]);
+	float f_decay = atomic_load(&p->params[P_FILTER_DECAY]);
+	float f_sustain = atomic_load(&p->params[P_FILTER_SUSTAIN]);
+	float f_release = atomic_load(&p->params[P_FILTER_RELEASE]);
+	float detune = atomic_load(&p->params[P_DETUNE]);
+	float cutoff = atomic_load(&p->params[P_CUTOFF]);
+
+	/* Update the volume slider */
+	update_slider(&p->gui->elements.volume_slider, 20, amp, 1.0f);
+
+	/* Update ADSR envelope sliders */
+	update_slider(&p->gui->elements.adsr_sliders[0], 20, attack, 2.0f);
+	update_slider(&p->gui->elements.adsr_sliders[1], 20, decay, 2.0f);
+	update_slider(&p->gui->elements.adsr_sliders[2], 20, sustain, 1.0f);
+	update_slider(&p->gui->elements.adsr_sliders[3], 20, release, 2.0f);
+
+	/* Update filter parameters sliders */
+	update_slider(&p->gui->elements.filter_adsr_sliders[0], 20, f_attack, 2.0f);
+	update_slider(&p->gui->elements.filter_adsr_sliders[1], 20, f_decay, 2.0f);
+	update_slider(&p->gui->elements.filter_adsr_sliders[2], 20, f_sustain, 1.0f);
+	update_slider(&p->gui->elements.filter_adsr_sliders[3], 20, f_release, 2.0f);
+	update_slider(&p->gui->elements.cutoff_slider, 20, cutoff, 1.0f);
+
+	update_slider(&p->gui->elements.detune_slider, 20, detune, 5.0f);
+}
+
+/* DROPDOWN MENUS IMPLEMENTATION */
+
+/* Create the waveforms dropdown menus */
 static void create_waveform_menu(
 	synth_plugin_t *p,
 	menu_t *menu,
@@ -555,6 +608,121 @@ static void create_waveform_menu(
 	uint8_t selected_wave = atomic_load(&p->params[param_id]);
 	menu->selected = menu->entries[selected_wave];
 }
+
+/* Draw the drop down menus (enums) */
+static void draw_waveforms_menu(synth_plugin_t *plugin, uint8_t wave)
+{
+	menu_t waveforms;
+	if (wave == P_WAVE_A)
+		waveforms = plugin->gui->elements.wave_a;
+	else if (wave == P_WAVE_B)
+		waveforms = plugin->gui->elements.wave_b;
+	else if (wave == P_WAVE_C)
+		waveforms = plugin->gui->elements.wave_c;
+	else
+		return;
+
+	if (waveforms.entries_on)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			uint32_t txt_w = get_text_width(waveforms.entries[i].name, 10);
+			int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+			int txt_y = waveforms.entries[i].rec.top + 10;
+
+			plugin_paint_rec(plugin->gui->bits, waveforms.entries[i].rec);
+			plugin_paint_text(
+				plugin->gui->bits,
+				txt_x, txt_y,
+				waveforms.entries[i].name,
+				10, BLACK);
+		}
+	}
+	else
+	{
+		uint32_t txt_w = get_text_width(waveforms.selected.name, 10);
+		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y = waveforms.base_rec.top + 10;
+
+		plugin_paint_rec(plugin->gui->bits, waveforms.base_rec);
+		plugin_paint_text(
+			plugin->gui->bits,
+			txt_x, txt_y,
+			waveforms.selected.name,
+			10, BLACK);
+	}
+
+	if (wave == P_WAVE_A)
+	{
+		uint32_t txt_w = get_text_width("Osc A", 10);
+		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y = waveforms.base_rec.top - 10;
+		plugin_paint_text(plugin->gui->bits,
+						  txt_x, txt_y, "Osc A", 10, BLACK);
+	}
+	else if (wave == P_WAVE_B)
+	{
+		uint32_t txt_w = get_text_width("Osc B", 10);
+		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y = waveforms.base_rec.top - 10;
+		plugin_paint_text(plugin->gui->bits,
+						  txt_x, txt_y, "Osc B", 10, BLACK);
+	}
+	else if (wave == P_WAVE_C)
+	{
+		uint32_t txt_w = get_text_width("Osc C", 10);
+		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
+		int txt_y = waveforms.base_rec.top - 10;
+		plugin_paint_text(plugin->gui->bits,
+						  txt_x, txt_y, "Osc C", 10, BLACK);
+	}
+}
+
+/* Change the waveforms on the oscillators on mouse press */
+static void change_waveform(synth_plugin_t *plugin, uint8_t p_wave, int x, int y)
+{
+	menu_t *waveforms;
+	if (p_wave == P_WAVE_A)
+		waveforms = &plugin->gui->elements.wave_a;
+	else if (p_wave == P_WAVE_B)
+		waveforms = &plugin->gui->elements.wave_b;
+	else if (p_wave == P_WAVE_C)
+		waveforms = &plugin->gui->elements.wave_c;
+	else
+		return;
+
+	rectangle_t sine =
+		waveforms->entries[0].rec;
+	rectangle_t square =
+		waveforms->entries[1].rec;
+	rectangle_t triangle =
+		waveforms->entries[2].rec;
+	rectangle_t sawtooth =
+		waveforms->entries[3].rec;
+
+	uint8_t wave = UINT8_MAX;
+
+	if (IN_REC(x, y, sine))
+		wave = SINE_WAVE;
+	if (IN_REC(x, y, square))
+		wave = SQUARE_WAVE;
+	else if (IN_REC(x, y, triangle))
+		wave = TRIANGLE_WAVE;
+	else if (IN_REC(x, y, sawtooth))
+		wave = SAWTOOTH_WAVE;
+
+	if (wave > SAWTOOTH_WAVE)
+		return;
+
+	atomic_store(&plugin->params[p_wave], wave);
+	atomic_store(&plugin->params_dirty[p_wave], true);
+
+	waveforms->entries_on = false;
+	waveforms->selected =
+		waveforms->entries[wave];
+}
+
+/* GUI ELEMENTS INIT AND DRAWING */
 
 /* Create the elements of the GUI, called in gui_create */
 void gui_create_elements(synth_plugin_t *plugin)
@@ -681,124 +849,7 @@ void gui_create_elements(synth_plugin_t *plugin)
 	gui_load_font_mem(__embedded_font);
 }
 
-/* Update slider position with the new  parameter data */
-static void update_slider(slider_t *slider, uint32_t width, float new_val, float val_max)
-{
-	if (slider->param_value != new_val)
-	{
-		slider->param_value = new_val;
-		slider->rec_value =
-			compute_horizontal_slider_rec(
-				slider->rec, width, new_val, val_max);
-	}
-}
-
-/* Update slider position with the parameter data */
-/* Updates even if the data is changed from
-the parameter view of the host and not the GUI view*/
-static void update_sliders(synth_plugin_t *p)
-{
-	/* Get the new data*/
-	float amp = atomic_load(&p->params[P_VOLUME]);
-	float attack = atomic_load(&p->params[P_ATTACK]);
-	float decay = atomic_load(&p->params[P_DECAY]);
-	float sustain = atomic_load(&p->params[P_SUSTAIN]);
-	float release = atomic_load(&p->params[P_RELEASE]);
-	float f_attack = atomic_load(&p->params[P_FILTER_ATTACK]);
-	float f_decay = atomic_load(&p->params[P_FILTER_DECAY]);
-	float f_sustain = atomic_load(&p->params[P_FILTER_SUSTAIN]);
-	float f_release = atomic_load(&p->params[P_FILTER_RELEASE]);
-	float detune = atomic_load(&p->params[P_DETUNE]);
-	float cutoff = atomic_load(&p->params[P_CUTOFF]);
-
-	/* Update the volume slider */
-	update_slider(&p->gui->elements.volume_slider, 20, amp, 1.0f);
-
-	/* Update ADSR envelope sliders */
-	update_slider(&p->gui->elements.adsr_sliders[0], 20, attack, 2.0f);
-	update_slider(&p->gui->elements.adsr_sliders[1], 20, decay, 2.0f);
-	update_slider(&p->gui->elements.adsr_sliders[2], 20, sustain, 1.0f);
-	update_slider(&p->gui->elements.adsr_sliders[3], 20, release, 2.0f);
-
-	/* Update filter parameters sliders */
-	update_slider(&p->gui->elements.filter_adsr_sliders[0], 20, f_attack, 2.0f);
-	update_slider(&p->gui->elements.filter_adsr_sliders[1], 20, f_decay, 2.0f);
-	update_slider(&p->gui->elements.filter_adsr_sliders[2], 20, f_sustain, 1.0f);
-	update_slider(&p->gui->elements.filter_adsr_sliders[3], 20, f_release, 2.0f);
-	update_slider(&p->gui->elements.cutoff_slider, 20, cutoff, 1.0f);
-
-	update_slider(&p->gui->elements.detune_slider, 20, detune, 5.0f);
-}
-
-/* Draw the drop down menus (enums) */
-static void draw_waveforms_menu(synth_plugin_t *plugin, uint8_t wave)
-{
-	menu_t waveforms;
-	if (wave == P_WAVE_A)
-		waveforms = plugin->gui->elements.wave_a;
-	else if (wave == P_WAVE_B)
-		waveforms = plugin->gui->elements.wave_b;
-	else if (wave == P_WAVE_C)
-		waveforms = plugin->gui->elements.wave_c;
-	else
-		return;
-
-	if (waveforms.entries_on)
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			uint32_t txt_w = get_text_width(waveforms.entries[i].name, 10);
-			int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-			int txt_y = waveforms.entries[i].rec.top + 10;
-
-			plugin_paint_rec(plugin->gui->bits, waveforms.entries[i].rec);
-			plugin_paint_text(
-				plugin->gui->bits,
-				txt_x, txt_y,
-				waveforms.entries[i].name,
-				10, BLACK);
-		}
-	}
-	else
-	{
-		uint32_t txt_w = get_text_width(waveforms.selected.name, 10);
-		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-		int txt_y = waveforms.base_rec.top + 10;
-
-		plugin_paint_rec(plugin->gui->bits, waveforms.base_rec);
-		plugin_paint_text(
-			plugin->gui->bits,
-			txt_x, txt_y,
-			waveforms.selected.name,
-			10, BLACK);
-	}
-
-	if (wave == P_WAVE_A)
-	{
-		uint32_t txt_w = get_text_width("Osc A", 10);
-		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-		int txt_y = waveforms.base_rec.top - 10;
-		plugin_paint_text(plugin->gui->bits,
-						  txt_x, txt_y, "Osc A", 10, BLACK);
-	}
-	else if (wave == P_WAVE_B)
-	{
-		uint32_t txt_w = get_text_width("Osc B", 10);
-		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-		int txt_y = waveforms.base_rec.top - 10;
-		plugin_paint_text(plugin->gui->bits,
-						  txt_x, txt_y, "Osc B", 10, BLACK);
-	}
-	else if (wave == P_WAVE_C)
-	{
-		uint32_t txt_w = get_text_width("Osc C", 10);
-		int txt_x = waveforms.base_rec.left + (waveforms.base_rec.right - waveforms.base_rec.left) / 2 - txt_w / 2;
-		int txt_y = waveforms.base_rec.top - 10;
-		plugin_paint_text(plugin->gui->bits,
-						  txt_x, txt_y, "Osc C", 10, BLACK);
-	}
-}
-
+/* Main draw function */
 void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 {
 	/* Update the sliders cursors positions */
@@ -849,86 +900,6 @@ void plugin_paint(synth_plugin_t *plugin, uint32_t *bits)
 }
 
 /* MOUSE GESTURES */
-
-/* Mouse drag function, used for sliders */
-void plugin_process_mouse_drag(synth_plugin_t *plugin, int x, int y)
-{
-	(void)y;
-	if (plugin->mouse.mouse_dragging)
-	{
-		/* Rectangle data */
-		uint32_t id = plugin->mouse.drag_param_id;
-		rectangle_t slider = get_slider_rec(plugin->gui->elements, id);
-		const uint32_t handle_width = 20;
-
-		/* Calculate the new value from the drag */
-		float travel = (float)((slider.right - slider.left) - handle_width);
-		float new_val = (x - (float)slider.left) / travel;
-		if (new_val < 0.0f)
-			new_val = 0.0f;
-		if (new_val > 1.0f)
-			new_val = 1.0f;
-
-		/* Double the value if slider is 0.0 to 2.0 range */
-		bool is_2_range =
-			id == P_ATTACK || id == P_DECAY || id == P_RELEASE ||
-			id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_RELEASE;
-
-		if (is_2_range)
-			new_val *= 2.0f;
-		else if (id == P_DETUNE)
-			new_val *= 5.0f;
-
-		atomic_store(&plugin->params[plugin->mouse.drag_param_id], new_val);
-		atomic_store(&plugin->params_dirty[plugin->mouse.drag_param_id], true);
-
-		if (plugin->host_params && plugin->host_params->request_flush)
-			plugin->host_params->request_flush(plugin->host);
-	}
-}
-
-static void change_waveform(synth_plugin_t *plugin, uint8_t p_wave, int x, int y)
-{
-	menu_t *waveforms;
-	if (p_wave == P_WAVE_A)
-		waveforms = &plugin->gui->elements.wave_a;
-	else if (p_wave == P_WAVE_B)
-		waveforms = &plugin->gui->elements.wave_b;
-	else if (p_wave == P_WAVE_C)
-		waveforms = &plugin->gui->elements.wave_c;
-	else
-		return;
-
-	rectangle_t sine =
-		waveforms->entries[0].rec;
-	rectangle_t square =
-		waveforms->entries[1].rec;
-	rectangle_t triangle =
-		waveforms->entries[2].rec;
-	rectangle_t sawtooth =
-		waveforms->entries[3].rec;
-
-	uint8_t wave = UINT8_MAX;
-
-	if (IN_REC(x, y, sine))
-		wave = SINE_WAVE;
-	if (IN_REC(x, y, square))
-		wave = SQUARE_WAVE;
-	else if (IN_REC(x, y, triangle))
-		wave = TRIANGLE_WAVE;
-	else if (IN_REC(x, y, sawtooth))
-		wave = SAWTOOTH_WAVE;
-
-	if (wave > SAWTOOTH_WAVE)
-		return;
-
-	atomic_store(&plugin->params[p_wave], wave);
-	atomic_store(&plugin->params_dirty[p_wave], true);
-
-	waveforms->entries_on = false;
-	waveforms->selected =
-		waveforms->entries[wave];
-}
 
 /* Mouse press handling, starting drag if we are on a slider */
 void plugin_process_mouse_press(synth_plugin_t *plugin, int x, int y)
@@ -1021,6 +992,43 @@ void plugin_process_mouse_release(synth_plugin_t *plugin)
 	}
 }
 
+/* Mouse drag function, used for sliders */
+void plugin_process_mouse_drag(synth_plugin_t *plugin, int x, int y)
+{
+	(void)y;
+	if (plugin->mouse.mouse_dragging)
+	{
+		/* Rectangle data */
+		uint32_t id = plugin->mouse.drag_param_id;
+		rectangle_t slider = get_slider_rec(plugin->gui->elements, id);
+		const uint32_t handle_width = 20;
+
+		/* Calculate the new value from the drag */
+		float travel = (float)((slider.right - slider.left) - handle_width);
+		float new_val = (x - (float)slider.left) / travel;
+		if (new_val < 0.0f)
+			new_val = 0.0f;
+		if (new_val > 1.0f)
+			new_val = 1.0f;
+
+		/* Double the value if slider is 0.0 to 2.0 range */
+		bool is_2_range =
+			id == P_ATTACK || id == P_DECAY || id == P_RELEASE ||
+			id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_RELEASE;
+
+		if (is_2_range)
+			new_val *= 2.0f;
+		else if (id == P_DETUNE)
+			new_val *= 5.0f;
+
+		atomic_store(&plugin->params[plugin->mouse.drag_param_id], new_val);
+		atomic_store(&plugin->params_dirty[plugin->mouse.drag_param_id], true);
+
+		if (plugin->host_params && plugin->host_params->request_flush)
+			plugin->host_params->request_flush(plugin->host);
+	}
+}
+
 /* EXTENSIONS FUNCTIONS */
 
 /* Check wether current API is supported */
@@ -1054,6 +1062,7 @@ bool create(const clap_plugin_t *plugin, const char *api, bool is_floating)
 	return true;
 }
 
+/* Destroy the GUI */
 void destroy(const clap_plugin_t *plugin)
 {
 	gui_destroy((synth_plugin_t *)plugin->plugin_data);
