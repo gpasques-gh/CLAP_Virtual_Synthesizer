@@ -200,15 +200,15 @@ static int synth_alocate(const clap_plugin_t *plugin)
 	}
 
 	/* Low-Pass Filter */
-	p->synth.filter.cutoff = 0.5;
-	p->synth.filter.prev_input = 0.0;
-	p->synth.filter.prev_output = 0.0;
-	p->synth.filter.env = false;
-	p->synth.filter.adsr.attack = 0.0;
-	p->synth.filter.adsr.decay = 0.0;
-	p->synth.filter.adsr.sustain = 0.0;
-	p->synth.filter.adsr.release = 0.0;
-	p->synth.filter.adsr.output = 0.0;
+	p->synth.filter.cutoff = 0.5f;
+	p->synth.filter.prev_input = 0.0f;
+	p->synth.filter.prev_output = 0.0f;
+	p->synth.filter.env_wet = 0.5f;
+	p->synth.filter.adsr.attack = 0.0f;
+	p->synth.filter.adsr.decay = 0.0f;
+	p->synth.filter.adsr.sustain = 0.0f;
+	p->synth.filter.adsr.release = 0.0f;
+	p->synth.filter.adsr.output = 0.0f;
 	p->synth.filter.adsr.state = ENV_IDLE;
 	p->synth.filter.adsr.type = ENV_TYPE_FILTER;
 

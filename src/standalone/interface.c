@@ -42,28 +42,26 @@ void render_adsr(
 }
 
 /* Render the filter ADSR envelope sliders */
-void render_filter_adsr(
-	float *attack, float *decay,
-	float *sustain, float *release)
+void render_filter_adsr(synth_t *synth)
 {
 	/* Filter ADSR envelope sliders */
 	GuiGroupBox((Rectangle){610, 40, 550, 160}, "Filter ADSR Envelope");
 
 	GuiLabel((Rectangle){730, 50, 100, 20}, "Attack");
 	GuiSlider((Rectangle){640, 70, 225, 40}, NULL, NULL,
-			  attack, 0.0f, 2.0f);
+			  &synth->filter.adsr.attack, 0.0f, 2.0f);
 
 	GuiLabel((Rectangle){730, 120, 100, 20}, "Decay");
 	GuiSlider((Rectangle){640, 140, 225, 40}, NULL, NULL,
-			  decay, 0.0f, 2.0f);
+			  &synth->filter.adsr.decay, 0.0f, 2.0f);
 
 	GuiLabel((Rectangle){990, 50, 100, 20}, "Sustain");
 	GuiSlider((Rectangle){900, 70, 225, 40}, NULL, NULL,
-			  sustain, 0.0f, 1.0f);
+			  &synth->filter.adsr.sustain, 0.0f, 1.0f);
 
 	GuiLabel((Rectangle){990, 120, 100, 20}, "Release");
 	GuiSlider((Rectangle){900, 140, 225, 40}, NULL, NULL,
-			  release, 0.0f, 1.0f);
+			  &synth->filter.adsr.release, 0.0f, 1.0f);
 }
 
 /* Render the oscillators waveforms dropdown menus*/
@@ -133,8 +131,8 @@ void render_synth_params(synth_t *synth)
 		DrawRectangle(900, 260, 225 * synth->lfo_detune, 40, GRAY);
 	}
 
-	GuiCheckBox((Rectangle){900, 330, 40, 40}, "Filter ADSR",
-				&synth->filter.env);
+	GuiLabel((Rectangle){900, 310, 150, 20}, "Filter env amount");
+	GuiSlider((Rectangle){900, 330, 225, 40}, NULL, NULL, &synth->filter.env_wet, 0.0f, 1.0f);
 }
 
 /* Render the options menu */

@@ -169,7 +169,7 @@ void assign_note(synth_t *synth, int midi_note)
 
 		free_voice->pressed = 1;
 		change_freq(free_voice, midi_note, 127, synth->detune);
-		if (pressed_voices == 0 && synth->filter.env)
+		if (pressed_voices == 0 && synth->filter.env_wet > 0.0f)
 		{
 			synth->filter.adsr.state = ENV_ATTACK;
 		}

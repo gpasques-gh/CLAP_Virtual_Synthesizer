@@ -52,9 +52,8 @@ typedef struct
 /* Low-pass filter structure */
 typedef struct
 {
-	float prev_input, prev_output, cutoff, env_cutoff, lfo_cutoff;
+	float prev_input, prev_output, cutoff, env_cutoff, lfo_cutoff, env_wet;
 	adsr_t adsr;
-	bool env;
 } lp_filter_t;
 
 /*
@@ -144,12 +143,6 @@ void voice_on(synth_t *synth, int key, int vel);
 
 /* Cut a voice with a given MIDI note active */
 void voice_off(synth_t *synth, int key);
-
-void update_filter_params(
-	synth_t *synth,
-	float cutoff,
-	float a, float d, float s, float r,
-	bool env);
 
 void update_lfo_params(
 	synth_t *synth,

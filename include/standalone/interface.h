@@ -9,9 +9,7 @@ void render_adsr(
 	float *sustain, float *release);
 
 /* Render the filter ADSR envelope sliders */
-void render_filter_adsr(
-	float *attack, float *decay,
-	float *sustain, float *release);
+void render_filter_adsr(synth_t *synth);
 
 /* Render the oscillators waveforms dropdown menus*/
 void render_osc_waveforms(

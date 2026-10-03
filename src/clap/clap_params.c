@@ -20,7 +20,7 @@ const param_desc_t PARAMS[P_COUNT] =
 		PARAM_FILTER_DECAY,
 		PARAM_FILTER_SUSTAIN,
 		PARAM_FILTER_RELEASE,
-		PARAM_FILTER_ENV_ON};
+		PARAM_FILTER_ENV_WET};
 
 /* Change the oscillators waveforms from the DAW */
 static void __apply_wave_change_to_osc(synth_t *synth, int osc, int wave)
@@ -107,8 +107,8 @@ void apply_param_to_engine(
 	case P_FILTER_RELEASE:
 		p->synth.filter.adsr.release = (float)value;
 		break;
-	case P_FILTER_ENV_ON:
-		p->synth.filter.env = (bool)(int)(value);
+	case P_FILTER_ENV_WET:
+		p->synth.filter.env_wet = (float)value;
 		break;
 	default:
 		break;
@@ -209,13 +209,8 @@ static bool params_value_to_text(
 
 	if (id >= P_WAVE_A && id <= P_WAVE_C)
 		snprintf(out, capacity, "%s", get_wave_name((int)value));
-	else if (id == P_ATTACK || id == P_DECAY || id == P_RELEASE)
+	else if (id == P_ATTACK || id == P_DECAY || id == P_RELEASE || id == P_FILTER_ATTACK || id == P_FILTER_DECAY || id == P_FILTER_RELEASE)
 		snprintf(out, capacity, "%.3f s", value);
-	else if (id == P_FILTER_ENV_ON)
-		if ((int)value)
-			snprintf(out, capacity, "%s", "Filter Env ON");
-		else
-			snprintf(out, capacity, "%s", "Filter Env OFF");
 	else
 		snprintf(out, capacity, "%.2f", value);
 

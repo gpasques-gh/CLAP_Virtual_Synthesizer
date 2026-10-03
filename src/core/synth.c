@@ -267,14 +267,9 @@ double process_filter(synth_t *synth, double sample)
 {
 	double cutoff = synth->filter.cutoff;
 
-	if (synth->filter.env && synth->lfo.mod_param != LFO_CUTOFF)
+	if (synth->lfo.mod_param != LFO_CUTOFF)
 	{
-		cutoff = synth->filter.cutoff +
-				 adsr_process(&synth->filter.adsr) / 2;
-		if (cutoff > 1.0)
-		{
-			cutoff = 1.0;
-		}
+		cutoff = synth->filter.cutoff + adsr_process(&synth->filter.adsr) * synth->filter.env_wet;
 		synth->filter.env_cutoff = cutoff;
 	}
 
@@ -323,7 +318,7 @@ void process_arpeggiator(synth_t *synth, int active_voices)
 			if (synth->voices[synth->active_arp].pressed)
 			{
 				synth->voices[synth->active_arp].adsr.state = ENV_ATTACK;
-				if (synth->filter.env)
+				if (synth->filter.env_wet > 0.0f)
 				{
 					synth->filter.adsr.state = ENV_ATTACK;
 				}
@@ -471,7 +466,7 @@ void voice_on(synth_t *synth, int key, int vel)
 	/* Press the voice and activate it */
 	free_voice->pressed = 1;
 	change_freq(free_voice, key, vel, synth->detune);
-	if (pressed_voices == 0 && synth->filter.env)
+	if (pressed_voices == 0 && synth->filter.env_wet > 0.0f)
 		synth->filter.adsr.state = ENV_ATTACK;
 
 	/* If the arpeggiator is on */
@@ -527,20 +522,6 @@ void voice_off(synth_t *synth, int key)
 			synth->active_arp_float = 1.0;
 		}
 	}
-}
-
-void update_filter_params(
-	synth_t *synth,
-	float cutoff,
-	float a, float d, float s, float r,
-	bool env)
-{
-	synth->filter.cutoff = cutoff;
-	synth->filter.adsr.attack = a;
-	synth->filter.adsr.decay = d;
-	synth->filter.adsr.sustain = s;
-	synth->filter.adsr.release = r;
-	synth->filter.env = env;
 }
 
 void update_lfo_params(

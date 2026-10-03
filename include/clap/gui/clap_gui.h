@@ -66,7 +66,7 @@ typedef struct
 	slider_t detune_slider;
 	slider_t cutoff_slider;
 	slider_t filter_adsr_sliders[4];
-	checkbox_t filter_env_on_box;
+	slider_t filter_env_wet_slider;
 
 	menu_t wave_a;
 	menu_t wave_b;
